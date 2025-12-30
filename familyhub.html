@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#4a90e2">
+<link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png"> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Master Hub</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71;
+            --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; display: none; padding-bottom: 100px; }
+        
+        /* Login Overlay */
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        /* Header */
+        header { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+        /* Grid */
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 150px; border: 1px solid #cbd5e0; }
+        .column h3 { text-align: center; margin-top: 0; font-size: 0.9rem; color: var(--dark); border-bottom: 1px solid #cbd5e0; padding-bottom: 10px; text-transform: uppercase; }
+
+        /* Item Cards */
+        .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 10px; }
+
+        /* Qty Controls */
+        .qty-container { float: right; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .qty-btn { background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .qty-display { font-weight: bold; min-width: 20px; text-align: center; }
+
+        /* Bottom Controls on Card */
+        .card-controls { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; align-items: center; }
+        .move-select { background: #f1f5f9; border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: bold; padding: 5px; border-radius: 6px; cursor: pointer; width: 110px; outline: none; }
+        
+        /* Modal & FAB */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2001; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; animation: popUp 0.3s ease; }
+        .modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 35px; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); cursor: pointer; z-index: 100; }
+        .btn-save { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        /* History */
+        .history-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
+        .h-item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; justify-content: space-between; font-size: 0.85rem; }
+
+        @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <h2>🏠 Family Hub</h2>
+        <input type="text" id="userName" placeholder="Your Name" style="width:80%; margin-bottom:15px; padding:12px; border-radius:10px; border:1px solid #ccc;">
+        <button class="btn-save" onclick="login()">Enter House</button>
+    </div>
+</div>
+
+<button class="fab" onclick="openModal()">+</button>
+
+<div id="itemModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin:0;">📦 New Item</h3>
+            <span style="cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="itemName" placeholder="Item Name" style="width:93%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc;">
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="number" id="itemQty" value="1" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ccc;">
+                <select id="itemLoc" style="flex:2; padding:12px; border-radius:10px; border:1px solid #ccc;">
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="Dining">Dining Area</option>
+                    <option value="Hall">Hall</option>
+                    <option value="Room1">Room 1</option>
+                    <option value="Room2">Room 2</option>
+                    <option value="Room3">Room 3</option>
+                </select>
+            </div>
+            <button class="btn-save" onclick="saveNewItem()">Add to Pantry</button>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <header>
+        <h2 style="margin:0; color:var(--primary);">Pantry Dashboard</h2>
+        <div id="userGreeting" style="font-size:0.8rem; color:#666;"></div>
+    </header>
+
+    <div class="inventory-grid">
+        <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
+        <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
+        <div class="column"><h3>🛋️ Hall</h3><div id="list-Hall"></div></div>
+        <div class="column"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
+        <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
+        <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
+    </div>
+
+    <div class="history-box">
+        <h4 style="margin-top:0;">📜 Family Activity</h4>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
+        authDomain: "familyhub-172f8.firebaseapp.com",
+        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
+        projectId: "familyhub-172f8",
+        storageBucket: "familyhub-172f8.firebasestorage.app",
+        messagingSenderId: "854442266486",
+        appId: "1:854442266486:web:be03aebb29f7537907b457"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let currentUser = "";
+    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
+
+    function login() {
+        const user = document.getElementById('userName').value.trim();
+        if(user) {
+            currentUser = user;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userGreeting').innerText = "Logged in: " + user;
+            startSync();
+        }
+    }
+
+    function openModal() { document.getElementById('itemModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
+
+    function logAction(msg) {
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        db.ref('history').push({ user: currentUser, action: msg, time: time });
+    }
+
+    function saveNewItem() {
+        const name = document.getElementById('itemName').value.trim();
+        const qty = parseInt(document.getElementById('itemQty').value);
+        const loc = document.getElementById('itemLoc').value;
+        if(name) {
+            db.ref('inventory').push({ name, qty, location: loc, user: currentUser });
+            logAction(`added ${name} (x${qty}) to ${loc}`);
+            document.getElementById('itemName').value = "";
+            closeModal();
+        }
+    }
+
+    function updateQty(id, name, change) {
+        const itemRef = db.ref('inventory/' + id);
+        itemRef.once('value').then((snap) => {
+            const currentQty = parseInt(snap.val().qty) || 0;
+            const newQty = currentQty + change;
+            if (newQty < 1) {
+                deleteItem(id, name);
+            } else {
+                itemRef.update({ qty: newQty });
+                logAction(`${change > 0 ? 'increased' : 'decreased'} ${name} to ${newQty}`);
+            }
+        });
+    }
+
+    function teleportItem(id, name, newLoc) {
+        if(!newLoc) return;
+        db.ref('inventory/' + id).update({ location: newLoc }).then(() => {
+            logAction(`shifted ${name} to ${newLoc}`);
+        });
+    }
+
+    function deleteItem(id, name) {
+        if(confirm("Remove " + name + "?")) {
+            db.ref('inventory/' + id).remove();
+            logAction(`removed ${name}`);
+        }
+    }
+
+    function startSync() {
+        db.ref('inventory').on('value', (snap) => {
+            rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+            const data = snap.val();
+            if(!data) return;
+            Object.keys(data).forEach(k => {
+                const item = data[k];
+                const div = document.getElementById(`list-${item.location}`);
+                if(div) {
+                    div.innerHTML += `
+                        <div class="card">
+                            <div class="qty-container">
+                                <button class="qty-btn" onclick="updateQty('${k}', '${item.name}', -1)">−</button>
+                                <span class="qty-display">${item.qty}</span>
+                                <button class="qty-btn" onclick="updateQty('${k}', '${item.name}', 1)">+</button>
+                            </div>
+                            <span class="item-title">${item.name}</span>
+                            <div class="card-controls">
+                                <select class="move-select" onchange="teleportItem('${k}', '${item.name}', this.value)">
+                                    <option value="" disabled selected>Shift to...</option>
+                                    ${rooms.map(r => `<option value="${r}">${r}</option>`).join('')}
+                                </select>
+                                <button onclick="deleteItem('${k}','${item.name}')" style="border:none; background:none; color:red; cursor:pointer; font-size:18px;">🗑</button>
+                            </div>
+                        </div>`;
+                }
+            });
+        });
+
+        db.ref('history').limitToLast(10).on('value', (snap) => {
+            const histDiv = document.getElementById('historyList');
+            histDiv.innerHTML = "";
+            const data = snap.val();
+            if(!data) return;
+            Object.keys(data).reverse().forEach(k => {
+                const h = data[k];
+                histDiv.innerHTML += `<div class="h-item"><span><b>${h.user}</b> ${h.action}</span><span style="color:#aaa;">${h.time}</span></div>`;
+            });
+        });
+    }
+
+    window.onclick = function(event) {
+        let modal = document.getElementById('itemModal');
+        if (event.target == modal) closeModal();
+    }
+</script>
+<script>
+    {
+  "name": "Family Master Hub",
+  "short_name": "FamilyHub",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#4a90e2",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1160/1160515.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
+</script>
+</body>
+</html>
