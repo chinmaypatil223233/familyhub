@@ -1,20 +1,28 @@
 <!DOCTYPE html>
-<link rel="manifest" href="manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#4a90e2">
-<link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png"> 
 <html lang="en">
 <head>
-    <link rel="manifest" href="manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#4a90e2">
-<link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png"> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Master Hub</title>
     
+    <link rel="manifest" href='data:application/manifest+json,{
+        "name": "Family Master Hub",
+        "short_name": "FamilyHub",
+        "start_url": "index.html",
+        "display": "standalone",
+        "background_color": "#f0f4f8",
+        "theme_color": "#4a90e2",
+        "icons": [{
+            "src": "https://cdn-icons-png.flaticon.com/512/1160/1160515.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }]
+    }'>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4a90e2">
+    <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png">
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
@@ -27,32 +35,25 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; display: none; padding-bottom: 100px; }
         
-        /* Login Overlay */
         #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
         .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
-        /* Header */
         header { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        /* Grid */
         .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 150px; border: 1px solid #cbd5e0; }
         .column h3 { text-align: center; margin-top: 0; font-size: 0.9rem; color: var(--dark); border-bottom: 1px solid #cbd5e0; padding-bottom: 10px; text-transform: uppercase; }
 
-        /* Item Cards */
         .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 10px; }
 
-        /* Qty Controls */
         .qty-container { float: right; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .qty-btn { background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 18px; }
         .qty-display { font-weight: bold; min-width: 20px; text-align: center; }
 
-        /* Bottom Controls on Card */
         .card-controls { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; align-items: center; }
         .move-select { background: #f1f5f9; border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: bold; padding: 5px; border-radius: 6px; cursor: pointer; width: 110px; outline: none; }
         
-        /* Modal & FAB */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2001; justify-content: center; align-items: center; }
         .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; animation: popUp 0.3s ease; }
         .modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -60,7 +61,6 @@
         .fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 35px; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); cursor: pointer; z-index: 100; }
         .btn-save { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
-        /* History */
         .history-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
         .h-item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; justify-content: space-between; font-size: 0.85rem; }
 
@@ -245,23 +245,5 @@
         if (event.target == modal) closeModal();
     }
 </script>
-<script>
-    {
-  "name": "Family Master Hub",
-  "short_name": "FamilyHub",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#4a90e2",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/1160/1160515.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    }
-  ]
-}
-</script>
 </body>
-
 </html>
