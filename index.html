@@ -17,8 +17,11 @@
 
         .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
         
-        header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:15px; position: relative; }
+        header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:10px; position: relative; }
         .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
+
+        /* Permanent Notice Board */
+        #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
         #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
         .admin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 8px; }
@@ -94,11 +97,16 @@
         <div id="adminIndicator" class="admin-badge">ADMIN</div>
     </header>
 
+    <div id="noticeBoard"></div>
+
     <div id="adminSettings">
         <span class="admin-section-title">ADMIN ANNOUNCEMENT</span>
         <div class="admin-row" style="flex-direction:column; align-items:stretch;">
             <input type="text" id="adminNoticeInput" placeholder="Post a global notice..." style="margin-bottom:5px;">
-            <button onclick="postNotice()" style="padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;">📢 Broadcast to All</button>
+            <div style="display:flex; gap:5px;">
+                <button onclick="postNotice()" style="flex:2; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;">📢 Post Notice</button>
+                <button onclick="db.ref('settings/globalNotice').remove()" style="flex:1; background:var(--danger); color:white; border:none; border-radius:8px;">Clear</button>
+            </div>
         </div>
         <span class="admin-section-title">NIGHT AUDIT</span>
         <div class="admin-row">
@@ -114,7 +122,7 @@
     <div class="inventory-grid">
         <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
         <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
-        <div class="column"><h3>🛋️ Couch Hall</h3><div id="list-Hall"></div></div>
+        <div class="column"><h3> Couch Hall</h3><div id="list-Hall"></div></div>
         <div class="column"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
         <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
         <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
@@ -129,6 +137,7 @@
         <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Couch Hall</option>
     </select>
     <button style="width:100%; padding:12px; background:var(--warning); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="sendRequest()">Send Alert 📢</button>
+    <button onclick="closeModal('reqModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
 </div></div>
 
 <div id="addItemModal" class="modal-overlay"><div class="modal-content">
@@ -138,6 +147,7 @@
         <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Couch Hall</option>
     </select>
     <button style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="saveNewItem()">Add to Pantry</button>
+    <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
 </div></div>
 
 <script>
@@ -167,14 +177,23 @@
     }
 
     function startAlertListener() {
+        // User Requests
         db.ref(`alerts/${currentUser}`).on('value', snap => {
             if(snap.val()) { ding.play(); showModalAlert("🙋‍♂️ New Request", snap.val().msg); }
         });
+        // Global Notices (Board and Popups)
         db.ref('settings/globalNotice').on('value', snap => {
             const data = snap.val();
-            if(data && data.id !== localStorage.getItem('lastNoticeId')) {
-                ding.play(); showModalAlert("📢 Admin Notice", data.msg);
-                localStorage.setItem('lastNoticeId', data.id);
+            const board = document.getElementById('noticeBoard');
+            if(data) {
+                board.innerText = "📢 " + data.msg;
+                board.style.display = 'block';
+                if(data.id !== localStorage.getItem('lastNoticeId')) {
+                    ding.play(); showModalAlert("📢 Admin Notice", data.msg);
+                    localStorage.setItem('lastNoticeId', data.id);
+                }
+            } else {
+                board.style.display = 'none';
             }
         });
     }
@@ -229,6 +248,7 @@
     function dismissAlert() { document.getElementById('globalAlert').style.display = 'none'; db.ref(`alerts/${currentUser}`).remove(); }
     function postNotice() { const msg = document.getElementById('adminNoticeInput').value.trim(); if(msg) { db.ref('settings/globalNotice').set({ msg: msg, id: Date.now() }); document.getElementById('adminNoticeInput').value = ""; } }
     function sendRequest() { const target = document.getElementById('reqPerson').value; const toLoc = document.getElementById('reqTargetLoc').value; db.ref(`alerts/${target}`).set({ msg: `${currentUser} needs the "${activeItemData.name}" in ${toLoc}!` }); document.getElementById('reqModal').style.display='none'; }
+    
     function startSync() {
         db.ref('settings').on('value', snap => { const d = snap.val() || {}; document.getElementById('reminderTimeInput').value = d.reminderTime || "21:30"; });
         db.ref('inventory').on('value', renderInventory);
@@ -244,6 +264,7 @@
             });
         });
     }
+
     function toggleUserStatus(name, isBusy) { db.ref('users/' + name).update({ status: isBusy ? 'Busy' : 'Free' }); }
     function saveReminderTime() { const val = document.getElementById('reminderTimeInput').value; if(val) db.ref('settings/reminderTime').set(val); }
     function checkNightlyAudit() {
@@ -257,6 +278,7 @@
             }
         });
     }
+
     function handleRequestClick(key, name, loc) { activeItemKey = key; activeItemData = {name, loc}; document.getElementById('reqText').innerText = `Requesting: ${name}`; document.getElementById('reqModal').style.display='flex'; }
     function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
     function closeModal(id) { document.getElementById(id).style.display='none'; }
