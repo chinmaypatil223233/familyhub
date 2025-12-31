@@ -356,60 +356,102 @@
     function teleportItem(id, newLoc) { db.ref('inventory/' + id).update({ location: newLoc }); }
 
     function startSync() {
-        db.ref('inventory').on('value', snap => {
-            rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
-            snap.forEach(child => {
-                const item = child.val(); const key = child.key;
-                const div = document.getElementById(`list-${item.location}`);
-                if(div) {
-                    div.innerHTML += `
-                        <div class="card">
-                            <div class="qty-container">
-                                <button class="qty-btn" onclick="updateQty('${key}', -1)">-</button>
-                                <span class="qty-display">${item.qty}</span>
-                                <button class="qty-btn" onclick="updateQty('${key}', 1)">+</button>
-                            </div>
-                            <span class="item-title">${item.name}</span>
-                            <div class="card-controls">
-                                <select class="move-select" onchange="teleportItem('${key}', this.value)">
-                                    <option value="" disabled selected>Move</option>
-                                    ${rooms.map(r => `<option value="${r}">${r}</option>`).join('')}
-                                </select>
-                                <button class="btn-req" onclick="openReqModal('${key}', '${item.name}', ${item.qty})">Req</button>
-                                <button onclick="if(confirm('Delete?')) db.ref('inventory/${key}').remove()" style="border:none; background:none; color:red; cursor:pointer; font-size:18px;">&times;</button>
-                            </div>
-                        </div>`;
-                }
-            });
-        });
-        db.ref('history').limitToLast(10).on('value', snap => {
-            const list = document.getElementById('historyList'); list.innerHTML = "";
-            snap.forEach(c => { const h = c.val(); list.innerHTML = `<div class="h-item"><span><b>${h.user}</b> ${h.action}</span><span style="color:#aaa;">${h.time}</span></div>` + list.innerHTML; });
-        });
-        // Add this inside your startSync() function to show the notices!
-db.ref('notices').on('value', snap => {
-    const board = document.getElementById('noticeList');
-    board.innerHTML = ""; // Clear the board before reloading
-    
-    snap.forEach(child => {
-        const n = child.val();
-        const isGuest = (selectedRole === "Guest");
+    // 1. NOTICE BOARD LISTENER (Fixes the invisible notice issue)
+    db.ref('notices').on('value', snap => {
+        const board = document.getElementById('noticeList');
+        if (!board) return;
+        board.innerHTML = ""; 
         
-        // Hide delete 'x' for Guests
-        const delBtn = isGuest ? "" : `<span onclick="db.ref('notices/${child.key}').remove()" style="color:red; cursor:pointer; float:right; font-weight:bold;">&times;</span>`;
-        
-        // This adds Chinmay's message to the yellow board
-        board.innerHTML += `
-            <div style="background:white; padding:10px; border-radius:10px; margin-bottom:8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <b style="color:var(--primary); font-size:0.8rem;">📌 ${n.user}</b>
-                    <span style="font-size:0.7rem; color:grey;">${n.time} ${delBtn}</span>
-                </div>
-                <div style="font-size:0.95rem;">${n.text}</div>
-            </div>`;
+        snap.forEach(child => {
+            const n = child.val();
+            const isGuest = (selectedRole === "Guest");
+            
+            // Hide delete 'x' for Guests on the notice board
+            const delBtn = isGuest ? "" : `<span onclick="db.ref('notices/${child.key}').remove()" style="color:red; cursor:pointer; float:right; font-weight:bold; font-size:1.2rem;">&times;</span>`;
+            
+            board.innerHTML += `
+                <div style="background:white; padding:10px; border-radius:10px; margin-bottom:8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #fbc02d;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <b style="color:var(--primary); font-size:0.8rem;">📌 ${n.user}</b>
+                        <span style="font-size:0.7rem; color:grey;">${n.time} ${delBtn}</span>
+                    </div>
+                    <div style="font-size:0.95rem;">${n.text}</div>
+                </div>`;
+        });
     });
-});
-    }
+
+    // 2. INVENTORY LISTENER (Handles items and guest restrictions)
+    db.ref('inventory').on('value', snap => {
+        rooms.forEach(r => {
+            const el = document.getElementById('list-' + r);
+            if (el) el.innerHTML = "";
+        });
+
+        snap.forEach(c => {
+            const item = c.val();
+            const isGuest = (selectedRole === "Guest");
+            const div = document.getElementById('list-' + item.location);
+            
+            if (div) {
+                // Only show the red 'X' if the user is a Member
+                const deleteBtn = isGuest ? "" : `<button onclick="if(confirm('Delete?')) db.ref('inventory/${c.key}').remove()" style="float:right; background:none; border:none; color:red; cursor:pointer; font-size:18px;">&times;</button>`;
+                
+                div.innerHTML += `
+                    <div class="card">
+                        <div class="qty-container">
+                            <button class="qty-btn" onclick="updateQty('${c.key}', -1)">-</button>
+                            <span style="font-weight:bold; min-width:20px; text-align:center;">${item.qty}</span>
+                            <button class="qty-btn" onclick="updateQty('${c.key}', 1)">+</button>
+                        </div>
+                        <b style="display:block; margin-bottom:5px;">${item.name}</b> ${deleteBtn}
+                        <small style="color:grey;">By: ${item.owner}</small>
+                        <div style="margin-top:10px; border-top:1px dashed #eee; padding-top:8px;">
+                            <select onchange="db.ref('inventory/${c.key}').update({location: this.value})" style="font-size:11px; width:100%;">
+                                <option disabled selected>Move to...</option>
+                                ${rooms.map(rm => `<option value="${rm}">${rm}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>`;
+            }
+        });
+    });
+
+    // 3. FAMILY STATUS SYNC (🟢 Online / 🔴 Busy)
+    db.ref('schedules').on('value', snap => {
+        const bar = document.getElementById('familyStatus');
+        if (!bar) return;
+        bar.innerHTML = '<span style="color:#7f8c8d; padding-right:5px; font-size:0.8rem;">Live Status:</span>';
+        
+        snap.forEach(c => {
+            const d = c.val();
+            const now = new Date();
+            const timeNow = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+            const isBusy = (timeNow >= d.start && timeNow <= d.end);
+            
+            bar.innerHTML += `
+                <div style="background:white; padding:5px 12px; border-radius:20px; border:1px solid #ddd; font-size:12px; display:flex; align-items:center; margin-right:5px;">
+                    <span class="status-dot ${isBusy ? 'status-busy' : 'status-online'}"></span> 
+                    <span style="text-transform:capitalize; font-weight:bold;">${c.key}</span>
+                </div>`;
+        });
+    });
+
+    // 4. ACTIVITY LOG SYNC
+    db.ref('history').limitToLast(10).on('value', snap => {
+        const list = document.getElementById('historyList');
+        if (!list) return;
+        list.innerHTML = "";
+        
+        snap.forEach(c => {
+            const h = c.val();
+            list.innerHTML = `
+                <div class="h-item">
+                    <span><b>${h.user}</b> ${h.action.replace('📢','')}</span>
+                    <span style="color:grey; font-size:0.7rem;">${h.time}</span>
+                </div>` + list.innerHTML;
+        });
+    });
+}
     function openNoticeModal() { document.getElementById('noticeModal').style.display = 'flex'; }
 function closeNoticeModal() { document.getElementById('noticeModal').style.display = 'none'; }
 
@@ -449,6 +491,7 @@ function syncNotices() {
 </script>
 </body>
 </html>
+
 
 
 
