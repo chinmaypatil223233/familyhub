@@ -386,6 +386,29 @@
             const list = document.getElementById('historyList'); list.innerHTML = "";
             snap.forEach(c => { const h = c.val(); list.innerHTML = `<div class="h-item"><span><b>${h.user}</b> ${h.action}</span><span style="color:#aaa;">${h.time}</span></div>` + list.innerHTML; });
         });
+        // Add this inside your startSync() function to show the notices!
+db.ref('notices').on('value', snap => {
+    const board = document.getElementById('noticeList');
+    board.innerHTML = ""; // Clear the board before reloading
+    
+    snap.forEach(child => {
+        const n = child.val();
+        const isGuest = (selectedRole === "Guest");
+        
+        // Hide delete 'x' for Guests
+        const delBtn = isGuest ? "" : `<span onclick="db.ref('notices/${child.key}').remove()" style="color:red; cursor:pointer; float:right; font-weight:bold;">&times;</span>`;
+        
+        // This adds Chinmay's message to the yellow board
+        board.innerHTML += `
+            <div style="background:white; padding:10px; border-radius:10px; margin-bottom:8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <b style="color:var(--primary); font-size:0.8rem;">📌 ${n.user}</b>
+                    <span style="font-size:0.7rem; color:grey;">${n.time} ${delBtn}</span>
+                </div>
+                <div style="font-size:0.95rem;">${n.text}</div>
+            </div>`;
+    });
+});
     }
     function openNoticeModal() { document.getElementById('noticeModal').style.display = 'flex'; }
 function closeNoticeModal() { document.getElementById('noticeModal').style.display = 'none'; }
@@ -426,6 +449,7 @@ function syncNotices() {
 </script>
 </body>
 </html>
+
 
 
 
