@@ -4,120 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Master Hub</title>
-    <link rel="manifest" href='data:application/manifest+json,{"name": "Family Master Hub", "short_name": "FamilyHub", "start_url": "index.html", "display": "standalone", "background_color": "#f0f4f8", "theme_color": "#4a90e2", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/1160/1160515.png", "sizes": "192x192", "type": "image/png"}]}'>
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#4a90e2">
-    <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png">
+    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-        /* Preserving all your CSS */
         :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 1400px; margin: 0 auto; display: none; padding-bottom: 100px; }
-        #alertPopup { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #fff9db; border: 2px solid var(--warning); border-radius: 15px; padding: 15px; z-index: 5000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideDown 0.4s ease; }
-        @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        header { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 150px; border: 1px solid #cbd5e0; }
-        .column h3 { text-align: center; margin-top: 0; font-size: 0.9rem; color: var(--dark); border-bottom: 1px solid #cbd5e0; padding-bottom: 10px; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        
+        /* Fixed Login Alignment */
+        #loginScreen { 
+            position: fixed; inset: 0; background: var(--primary); 
+            display: flex; justify-content: center; align-items: center; z-index: 3000; 
+        }
+        .login-box { 
+            background: white; padding: 40px 30px; border-radius: 20px; 
+            text-align: center; width: 85%; max-width: 350px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
+        
+        /* Status Shelf */
+        .status-shelf { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: white; border-radius: 15px; }
+        .user-chip { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; white-space: nowrap; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 600; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot-free { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot-busy { background: var(--danger); }
+
+        /* Free/Busy Slot Control */
+        .status-panel { background: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
+        .status-btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .status-btn { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s; }
+
+        /* Card Elements */
         .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 10px; }
-        .qty-container { float: right; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .qty-btn { background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .qty-display { font-weight: bold; min-width: 20px; text-align: center; }
-        .card-controls { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; align-items: center; }
-        .move-select { background: #f1f5f9; border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: bold; padding: 5px; border-radius: 6px; width: 90px; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2001; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; animation: popUp 0.3s ease; }
-        .modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; }
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 35px; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); cursor: pointer; z-index: 100; }
-        .btn-save { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-req { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .history-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .h-item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; justify-content: space-between; font-size: 0.85rem; align-items: center; }
-        .btn-done { background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 5px; font-size: 10px; cursor: pointer; margin-left: 10px; }
-        @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .item-name { font-size: 1.1rem; font-weight: bold; }
+        .default-prompt { color: var(--primary); font-size: 0.75rem; text-decoration: underline; cursor: pointer; display: block; margin: 5px 0; }
+        
+        .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
+        .qty-btn { background: var(--primary); color: white; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; }
+
+        .control-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+        .shift-select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e0; flex: 1; font-size: 0.8rem; }
+        .btn-req { background: var(--warning); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; }
+
+        /* Grid */
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2001; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
+        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; }
+        #nightlyPopup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; padding: 20px; color: white; text-align: center; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<div id="alertPopup">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:30px;">📢</span>
-        <div>
-            <h4 style="margin:0; color:#d35400;">New House Request!</h4>
-            <p id="alertMsg" style="margin:5px 0 0 0; font-size:14px;"></p>
-        </div>
-    </div>
-    <button onclick="document.getElementById('alertPopup').style.display='none'" style="margin-top:10px; width:100%; background:var(--warning); color:white; border:none; padding:8px; border-radius:8px; font-weight:bold; cursor:pointer;">Got it!</button>
-</div>
-
 <div id="loginScreen">
     <div class="login-box">
-        <h2>🏠 Family Hub</h2>
-        <input type="text" id="userName" placeholder="Enter Your Name" style="width:80%; margin-bottom:15px; padding:12px; border-radius:10px; border:1px solid #ccc;">
-        <button class="btn-save" onclick="login()">Enter House</button>
+        <h2 style="color:var(--primary); margin-top:0;">🏠 Family Hub</h2>
+        <input type="text" id="userName" placeholder="Type Your Name" style="width:100%; padding:15px; margin-bottom:20px; border-radius:10px; border:1px solid #ddd; box-sizing: border-box; font-size: 1rem;">
+        <button onclick="login()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size: 1rem; cursor:pointer;">Enter House</button>
     </div>
 </div>
 
-<button class="fab" onclick="openModal()">+</button>
-
-<div id="itemModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="margin:0;">📦 New Item</h3>
-            <span style="cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <input type="text" id="itemName" placeholder="Item Name" style="width:93%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc;">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="number" id="itemQty" value="1" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ccc;">
-                <select id="itemLoc" style="flex:2; padding:12px; border-radius:10px; border:1px solid #ccc;">
-                    <option value="Kitchen">Kitchen</option>
-                    <option value="Dining">Dining Area</option>
-                    <option value="Hall">Hall</option>
-                    <option value="Room1">Room 1</option>
-                    <option value="Room2">Room 2</option>
-                    <option value="Room3">Room 3</option>
-                </select>
-            </div>
-            <button class="btn-save" onclick="saveNewItem()">Add to Pantry</button>
-        </div>
+<div id="nightlyPopup">
+    <div style="background: #2d3748; padding: 30px; border-radius: 20px; border: 2px solid var(--warning); width: 100%; max-width: 400px;">
+        <h2 style="color:var(--warning);">🌙 Nightly Return</h2>
+        <div id="misplacedList" style="margin:20px 0; text-align:left; font-size:1rem; color: #cbd5e0;"></div>
+        <button onclick="document.getElementById('nightlyPopup').style.display='none'" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">I'm on it!</button>
     </div>
 </div>
 
-<div id="reqModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header" style="background: var(--warning);">
-            <h3 style="margin:0;">🙋‍♂️ Request Item</h3>
-            <span style="cursor:pointer; font-size:24px;" onclick="closeReqModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="reqText" style="margin-top:0; font-weight:bold;"></p>
-            <input type="text" id="reqPerson" placeholder="Ask whom? (Mom, Dad...)" style="width:93%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc;">
-            <select id="reqTargetLoc" style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; border:1px solid #ccc;">
-                <option value="Kitchen">Bring to Kitchen</option>
-                <option value="Dining">Bring to Dining</option>
-                <option value="Hall">Bring to Hall</option>
-                <option value="Room1">Bring to Room 1</option>
-                <option value="Room2">Bring to Room 2</option>
-                <option value="Room3">Bring to Room 3</option>
-            </select>
-            <button class="btn-save" style="background: var(--warning);" onclick="sendRequest()">Send Broadcast 📢</button>
-        </div>
-    </div>
-</div>
+<button class="fab" onclick="openItemModal()">+</button>
 
 <div class="container" id="mainApp">
-    <header>
+    <header style="background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:15px;">
         <h2 style="margin:0; color:var(--primary);">Pantry Dashboard</h2>
-        <div id="userGreeting" style="font-size:0.8rem; color:#666;"></div>
     </header>
+
+    <div class="status-shelf" id="familyStatuses"></div>
+
+    <div class="status-panel">
+        <h4 style="margin:0; color:var(--dark)">My Status</h4>
+        <div class="status-btn-row">
+            <button class="status-btn" style="background:var(--success); color:white;" onclick="updateMyStatus('Free')">Set Free</button>
+            <button class="status-btn" style="background:var(--danger); color:white;" onclick="updateMyStatus('Busy')">Set Busy</button>
+        </div>
+    </div>
 
     <div class="inventory-grid">
         <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
@@ -127,10 +103,25 @@
         <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
         <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
     </div>
+</div>
 
-    <div class="history-box">
-        <h4 style="margin-top:0;">📜 Family Activity</h4>
-        <div id="historyList"></div>
+<div id="locCheckModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">📍 Set Default Home</h3>
+        <p id="locCheckText"></p>
+        <div id="locYesNo" style="display:flex; gap:10px;">
+            <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Yes</button>
+            <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px; font-weight:bold;">No</button>
+        </div>
+        <div id="locSelector" style="display:none; margin-top:20px;">
+            <p>Pick the permanent home:</p>
+            <select id="newDefaultLoc" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px;">
+                <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option>
+                <option value="Hall">Hall</option><option value="Room1">Room 1</option>
+                <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
+            </select>
+            <button onclick="saveNewDefault()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Save Home</button>
+        </div>
     </div>
 </div>
 
@@ -148,19 +139,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     let currentUser = "";
-    let reqItemKey = ""; // Track specific item ID being requested
-    let reqItemName = "";
-    let reqOrigLoc = ""; 
-    let initialLoad = true;
-    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
-
-    function speak(text) {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            window.speechSynthesis.speak(utterance);
-        }
-    }
+    let activeItemKey = "";
+    let activeItemData = {};
 
     function login() {
         const user = document.getElementById('userName').value.trim();
@@ -168,172 +148,116 @@
             currentUser = user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userGreeting').innerText = "Logged in as: " + user;
+            updateMyStatus('Free');
             startSync();
-            listenForIncomingRequests();
+            setInterval(checkNightlyAudit, 60000); 
         }
     }
 
-    function openModal() { document.getElementById('itemModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
-    
-    function openReqModal(id, name, loc) {
-        reqItemKey = id;
-        reqItemName = name;
-        reqOrigLoc = loc;
-        document.getElementById('reqText').innerText = `Requesting: ${name} (from ${loc})`;
-        document.getElementById('reqModal').style.display = 'flex';
-    }
-    function closeReqModal() { document.getElementById('reqModal').style.display = 'none'; }
-
-    function logAction(msg, extra = {}) {
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        db.ref('history').push({ user: currentUser, action: msg, time: time, ...extra });
-    }
-
-    // NEW LOGIC: Move item upon acceptance
-    function fulfillRequest(histKey, itemName, fromLoc, toLoc, originalItemKey) {
-        // 1. Subtract from original
-        const oldRef = db.ref('inventory/' + originalItemKey);
-        oldRef.once('value').then(s => {
-            if (s.exists()) {
-                const newQty = (s.val().qty || 1) - 1;
-                if (newQty <= 0) oldRef.remove();
-                else oldRef.update({ qty: newQty });
-            }
-        });
-
-        // 2. Add to new location
-        // Search if item already exists in target room
-        db.ref('inventory').orderByChild('location').equalTo(toLoc).once('value', (snap) => {
-            let found = false;
-            snap.forEach(child => {
-                if (child.val().name.toLowerCase() === itemName.toLowerCase()) {
-                    db.ref('inventory/' + child.key).update({ qty: child.val().qty + 1 });
-                    found = true;
-                }
-            });
-            if (!found) {
-                db.ref('inventory').push({ name: itemName, qty: 1, location: toLoc });
-            }
-        });
-
-        // 3. Mark request as done in history
-        db.ref('history/' + histKey).update({ fulfilled: true });
-        logAction(`delivered ${itemName} to ${toLoc} ✅`);
-        speak(`${itemName} has been delivered to ${toLoc}`);
-    }
-
-    function listenForIncomingRequests() {
-        db.ref('history').limitToLast(1).on('child_added', (snap) => {
-            if(initialLoad) return;
-            const data = snap.val();
-            if(data.action.includes('📢') && data.user !== currentUser) {
-                document.getElementById('alertMsg').innerHTML = `<b>${data.user}</b> ${data.action}`;
-                document.getElementById('alertPopup').style.display = 'block';
-                const cleanMsg = data.action.replace(/\*/g, '').replace('📢', '');
-                speak(`${data.user} ${cleanMsg}`);
-            }
-        });
-        setTimeout(() => { initialLoad = false; }, 2000);
-    }
-
-    function sendRequest() {
-        const person = document.getElementById('reqPerson').value.trim();
-        const targetLoc = document.getElementById('reqTargetLoc').value;
-        if(person) {
-            logAction(`requested **${reqItemName}** from ${person} to ${targetLoc} 📢`, {
-                isRequest: true,
-                itemName: reqItemName,
-                fromLoc: reqOrigLoc,
-                toLoc: targetLoc,
-                itemKey: reqItemKey,
-                targetPerson: person
-            });
-            closeReqModal();
-        }
+    function updateMyStatus(status) {
+        if(currentUser) db.ref('users/' + currentUser).update({ status: status });
     }
 
     function startSync() {
         db.ref('inventory').on('value', (snap) => {
-            rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+            ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"].forEach(r => {
+                const el = document.getElementById(`list-${r}`);
+                if(el) el.innerHTML = "";
+            });
             snap.forEach(child => {
                 const item = child.val();
                 const key = child.key;
                 const div = document.getElementById(`list-${item.location}`);
                 if(div) {
+                    const isDefaultMissing = (!item.homeLoc || item.homeLoc === "None");
                     div.innerHTML += `
                         <div class="card">
-                            <div class="qty-container">
-                                <button class="qty-btn" onclick="updateQty('${key}', '${item.name}', -1)">-</button>
-                                <span class="qty-display">${item.qty}</span>
-                                <button class="qty-btn" onclick="updateQty('${key}', '${item.name}', 1)">+</button>
+                            <div class="qty-box">
+                                <button class="qty-btn" onclick="updateQty('${key}', -1)">-</button>
+                                <b>${item.qty || 1}</b>
+                                <button class="qty-btn" onclick="updateQty('${key}', 1)">+</button>
                             </div>
-                            <span class="item-title">${item.name}</span>
-                            <div class="card-controls">
-                                <select class="move-select" onchange="teleportItem('${key}', '${item.name}', this.value)">
+                            <div class="item-name">${item.name}</div>
+                            ${isDefaultMissing ? `<span class="default-prompt" onclick="openLocCheck('${key}', '${item.name}', '${item.location}')">Is this the default location?</span>` : ''}
+                            <div class="control-row">
+                                <select class="shift-select" onchange="shiftItem('${key}', this.value)">
                                     <option value="" disabled selected>Shift to...</option>
-                                    ${rooms.map(r => `<option value="${r}">${r}</option>`).join('')}
+                                    <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option>
+                                    <option value="Hall">Hall</option><option value="Room1">Room 1</option>
+                                    <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
                                 </select>
-                                <button class="btn-req" onclick="openReqModal('${key}', '${item.name}', '${item.location}')">🙋‍♂️ Req</button>
-                                <button onclick="deleteItem('${key}','${item.name}')" style="border:none; background:none; color:red; cursor:pointer;">🗑</button>
+                                <button class="btn-req">Req</button>
+                                <span onclick="deleteItem('${key}')" style="cursor:pointer; font-size: 1.2rem;">🗑️</span>
                             </div>
                         </div>`;
                 }
             });
         });
 
-        db.ref('history').limitToLast(10).on('value', (snap) => {
-            const list = document.getElementById('historyList');
-            list.innerHTML = "";
-            snap.forEach(c => {
-                const h = c.val();
-                const isReq = h.isRequest && !h.fulfilled;
-                const doneBtn = isReq ? `<button class="btn-done" onclick="fulfillRequest('${c.key}', '${h.itemName}', '${h.fromLoc}', '${h.toLoc}', '${h.itemKey}')">Complete ✅</button>` : "";
-                
-                list.innerHTML = `
-                <div class="h-item" style="${h.fulfilled ? 'opacity:0.5' : ''}">
-                    <span><b>${h.user}</b> ${h.action} ${doneBtn}</span>
-                    <span style="color:#aaa;">${h.time}</span>
-                </div>` + list.innerHTML;
+        const family = ["Mom", "Dad", "Chinmay", "Test"];
+        db.ref('users').on('value', (snap) => {
+            const shelf = document.getElementById('familyStatuses'); shelf.innerHTML = "";
+            const states = snap.val() || {};
+            family.forEach(name => {
+                const isFree = (states[name] && states[name].status === 'Free');
+                shelf.innerHTML += `<div class="user-chip"><span class="dot ${isFree?'dot-free':'dot-busy'}"></span>${name}</div>`;
             });
         });
     }
 
-    // [Standard helper functions updateQty, teleportItem, deleteItem, saveNewItem preserved...]
-    function saveNewItem() {
-        const name = document.getElementById('itemName').value.trim();
-        const qty = parseInt(document.getElementById('itemQty').value);
-        const loc = document.getElementById('itemLoc').value;
-        if(name) {
-            db.ref('inventory').push({ name, qty, location: loc });
-            logAction(`added ${name} (x${qty}) to ${loc}`);
-            document.getElementById('itemName').value = "";
-            closeModal();
+    function openLocCheck(key, name, loc) {
+        activeItemKey = key;
+        activeItemData = { name, loc };
+        document.getElementById('locCheckText').innerText = `${name} is in ${loc}. Is this its default home?`;
+        document.getElementById('locYesNo').style.display = 'flex';
+        document.getElementById('locSelector').style.display = 'none';
+        document.getElementById('locCheckModal').style.display = 'flex';
+    }
+
+    function confirmDefault(isYes) {
+        if(isYes) {
+            db.ref('inventory/' + activeItemKey).update({ homeLoc: activeItemData.loc });
+            document.getElementById('locCheckModal').style.display = 'none';
+        } else {
+            document.getElementById('locYesNo').style.display = 'none';
+            document.getElementById('locSelector').style.display = 'block';
         }
     }
-    function updateQty(id, name, change) {
-        const ref = db.ref('inventory/' + id);
-        ref.once('value').then(s => {
-            const newQty = (s.val().qty || 0) + change;
-            if(newQty < 1) deleteItem(id, name);
-            else {
-                ref.update({ qty: newQty });
-                logAction(`updated ${name} qty to ${newQty}`);
-            }
-        });
+
+    function saveNewDefault() {
+        const newHome = document.getElementById('newDefaultLoc').value;
+        db.ref('inventory/' + activeItemKey).update({ homeLoc: newHome });
+        document.getElementById('locCheckModal').style.display = 'none';
     }
-    function teleportItem(id, name, newLoc) {
-        db.ref('inventory/' + id).update({ location: newLoc });
-        logAction(`shifted ${name} to ${newLoc}`);
+
+    function shiftItem(key, newLoc) { db.ref('inventory/' + key).update({ location: newLoc }); }
+    function updateQty(key, change) { db.ref('inventory/'+key+'/qty').transaction(q => (q || 1) + change); }
+    function deleteItem(key) { if(confirm("Delete item?")) db.ref('inventory/'+key).remove(); }
+    
+    function openItemModal() {
+        const name = prompt("Item Name:");
+        const loc = prompt("Where is it now? (Kitchen, Hall, Dining, Room1, Room2, Room3)");
+        if(name && loc) db.ref('inventory').push({ name, location: loc, qty: 1, homeLoc: "None" });
     }
-    function deleteItem(id, name) {
-        if(confirm("Delete " + name + "?")) {
-            db.ref('inventory/' + id).remove();
-            logAction(`removed ${name}`);
+
+    function checkNightlyAudit() {
+        const now = new Date();
+        if(now.getHours() === 21 && now.getMinutes() === 30) {
+            db.ref('inventory').once('value', snap => {
+                let list = [];
+                snap.forEach(c => {
+                    const i = c.val();
+                    if(i.homeLoc && i.homeLoc !== "None" && i.location !== i.homeLoc) {
+                        list.push(`• ${i.name} belongs in ${i.homeLoc}`);
+                    }
+                });
+                if(list.length > 0) {
+                    document.getElementById('misplacedList').innerHTML = list.join("<br>");
+                    document.getElementById('nightlyPopup').style.display = 'flex';
+                }
+            });
         }
     }
-    window.onclick = function(e) { if (e.target.className === 'modal-overlay') { closeModal(); closeReqModal(); } }
 </script>
 </body>
 </html>
