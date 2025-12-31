@@ -323,14 +323,18 @@
         if(name) { db.ref('inventory').push({ name, qty, location: loc }); logAction(`added ${name} to ${loc}`); closeModal(); }
     }
 
-    function updateQty(id, change) {
-        const ref = db.ref('inventory/' + id);
-        ref.once('value').then(s => {
-            const val = s.val(); if(!val) return;
-            const nQty = (val.qty || 0) + change;
-            if(nQty < 1) ref.remove(); else ref.update({ qty: nQty });
-        });
-    }
+  function updateQty(id, change) {
+    const ref = db.ref('inventory/' + id);
+    ref.once('value').then(s => {
+        const val = s.val(); 
+        if(!val) return;
+        // parseInt ensures the number is treated as math, not text
+        const currentQty = parseInt(val.qty) || 0; 
+        const nQty = currentQty + change;
+        if(nQty < 1) ref.remove(); 
+        else ref.update({ qty: nQty });
+    });
+}
 
     function teleportItem(id, newLoc) { db.ref('inventory/' + id).update({ location: newLoc }); }
 
@@ -369,3 +373,4 @@
 </script>
 </body>
 </html>
+
