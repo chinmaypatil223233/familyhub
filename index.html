@@ -147,7 +147,6 @@
                 <input type="number" id="itemQty" value="1" style="width:30%;">
                 <select id="itemLoc" style="flex:1;">
                     <option value="Kitchen">Kitchen</option>
-                    <option value="Dining">Dining</option>
                     <option value="Hall">Hall</option>
                     <option value="Room1">Room 1</option>
                     <option value="Room2">Room 2</option>
@@ -199,7 +198,7 @@
     let currentUser = "";
     let activeItem = null;
     let initialLoad = true;
-    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
+    const rooms = ["Kitchen","Hall", "Room1", "Room2", "Room3"];
 
     function login() {
         const user = document.getElementById('userName').value.trim();
@@ -490,6 +489,7 @@ function syncNotices() {
 </script>
 </body>
 </html>
+
 
 
 
