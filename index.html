@@ -131,10 +131,15 @@
 </div>
 
 <div class="container" id="mainApp">
-    <header>
+ <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+    <div style="text-align: left;">
         <h2 style="margin:0; color:var(--primary);">Pantry Dashboard</h2>
         <div id="userGreeting" style="font-size:0.8rem; color:#666;"></div>
-    </header>
+    </div>
+    <button onclick="logout()" style="background: #f1f5f9; color: var(--danger); border: 1px solid #ddd; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+        Logout 🚪
+    </button>
+</header>
 
     <div class="inventory-grid">
         <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
@@ -301,6 +306,23 @@
             closeReqModal();
         }
     }
+    function logout() {
+    if(confirm("Do you want to logout?")) {
+        // Clear user data
+        currentUser = "";
+        
+        // Hide App, Show Login
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        
+        // Reset input fields
+        document.getElementById('userName').value = "";
+        
+        // Optional: Refresh page to clear all listeners
+        location.reload();
+    }
+}
 </script>
 </body>
 </html>
+
