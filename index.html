@@ -12,7 +12,7 @@
         :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
         
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 5000; }
         .login-box { background: white; padding: 40px 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
         .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
@@ -20,7 +20,6 @@
         header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:15px; position: relative; }
         .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
 
-        /* Admin Settings Panel */
         #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
         .admin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 8px; }
 
@@ -29,9 +28,6 @@
 
         .status-shelf { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: white; border-radius: 15px; }
         .user-chip { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; white-space: nowrap; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 600; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .dot-free { background: var(--success); }
-        .dot-busy { background: var(--danger); }
 
         .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-name { font-size: 1.1rem; font-weight: bold; text-transform: capitalize; }
@@ -69,11 +65,12 @@
     </div>
 </div>
 
-<div id="nightlyPopup">
-    <div style="background: #2d3748; padding: 30px; border-radius: 20px; border: 2px solid var(--warning); width: 100%; max-width: 400px;">
-        <h2 style="color:var(--warning);">🌙 Nightly Return</h2>
-        <div id="misplacedList" style="margin:20px 0; text-align:left; font-size:1rem; color: #cbd5e0;"></div>
-        <button onclick="document.getElementById('nightlyPopup').style.display='none'" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Understood!</button>
+<div id="nightlyPopup" class="modal-overlay" style="display:none; z-index: 9999;">
+    <div style="background: #2d3748; padding: 30px; border-radius: 20px; border: 2px solid var(--warning); width: 100%; max-width: 400px; color: white;">
+        <h2 style="color:var(--warning);">🌙 Nightly Audit</h2>
+        <p>Please return these items to their homes:</p>
+        <div id="misplacedList" style="margin:20px 0; text-align:left; font-size:1rem; color: #cbd5e0; white-space: pre-wrap;"></div>
+        <button onclick="document.getElementById('nightlyPopup').style.display='none'" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Done!</button>
     </div>
 </div>
 
@@ -186,13 +183,18 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             startSync();
+            // Start the clock to check for Nightly Audit every minute
+            setInterval(checkNightlyAudit, 60000); 
         }
     }
 
     function toggleRequests(val) { db.ref('settings/requestsAllowed').set(val); }
     function saveReminderTime() {
         const val = document.getElementById('reminderTimeInput').value;
-        if(val) db.ref('settings/reminderTime').set(val);
+        if(val) {
+            db.ref('settings/reminderTime').set(val);
+            alert("Audit time saved!");
+        }
     }
 
     function startSync() {
@@ -210,12 +212,38 @@
         db.ref('users').on('value', snap => {
             const shelf = document.getElementById('familyStatuses'); shelf.innerHTML = "";
             const reqSel = document.getElementById('reqPerson'); reqSel.innerHTML = "";
-            const states = snap.val() || {};
             family.forEach(name => {
-                const isFree = (states[name] && states[name].status === 'Free');
-                shelf.innerHTML += `<div class="user-chip"><span class="dot ${isFree?'dot-free':'dot-busy'}"></span>${name}</div>`;
+                shelf.innerHTML += `<div class="user-chip">${name}</div>`;
                 if(name !== currentUser) reqSel.innerHTML += `<option value="${name}">${name}</option>`;
             });
+        });
+    }
+
+    function checkNightlyAudit() {
+        db.ref('settings/reminderTime').once('value', snap => {
+            const targetTime = snap.val();
+            if (!targetTime) return;
+
+            const now = new Date();
+            const currentClock = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            if(currentClock === targetTime) {
+                db.ref('inventory').once('value', invSnap => {
+                    let misplacedItems = [];
+                    invSnap.forEach(c => {
+                        const i = c.val();
+                        // Check if current location differs from home location
+                        if(i.homeLoc && i.homeLoc !== "None" && i.location !== i.homeLoc) {
+                            misplacedItems.push(`• ${i.name} (is in ${i.location}, should be in ${i.homeLoc})`);
+                        }
+                    });
+                    
+                    if(misplacedItems.length > 0) {
+                        document.getElementById('misplacedList').innerText = misplacedItems.join("\n");
+                        document.getElementById('nightlyPopup').style.display = 'flex';
+                    }
+                });
+            }
         });
     }
 
@@ -235,8 +263,8 @@
                             <button class="qty-btn" onclick="updateQty('${key}', 1)">+</button>
                         </div>
                         <div class="item-name">${item.name}</div>
-                        <div style="font-size:0.7rem; color:#666">🏠 Home: ${item.homeLoc || 'None'}</div>
-                        ${isDefaultMissing ? `<span class="default-prompt" onclick="openLocCheck('${key}', '${item.name}', '${item.location}')">Is this the default location?</span>` : ''}
+                        <div style="font-size:0.75rem; color:#666; margin-bottom:5px;">🏠 Home: ${item.homeLoc || 'None'}</div>
+                        ${isDefaultMissing ? `<span class="default-prompt" onclick="openLocCheck('${key}', '${item.name}', '${item.location}')">Is this the permanent home?</span>` : ''}
                         <div class="control-row">
                             <select class="shift-select" onchange="shiftItem('${key}', this.value)">
                                 <option value="" disabled selected>Move to...</option>
@@ -245,9 +273,9 @@
                                 <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
                             </select>
                             <button class="btn-req ${!requestsAllowed ? 'req-disabled' : ''}" onclick="handleRequestClick('${key}', '${item.name}', '${item.location}')">Req</button>
-                            <span onclick="deleteItem('${key}')" style="cursor:pointer; padding:5px;">🗑️</span>
                         </div>
-                        ${isAdmin ? `<button class="admin-home-btn" style="display:block" onclick="openLocCheck('${key}', '${item.name}', '${item.location}')">⚙️ Update Home</button>` : ''}
+                        ${isAdmin ? `<button class="admin-home-btn" style="display:block" onclick="openLocCheck('${key}', '${item.name}', '${item.location}')">⚙️ Update Home</button>
+                                     <button onclick="deleteItem('${key}')" style="background:none; border:none; color:red; font-size:0.7rem; width:100%; margin-top:5px; cursor:pointer;">Delete Item</button>` : ''}
                     </div>`;
             }
         });
@@ -255,10 +283,6 @@
 
     function handleRequestClick(key, name, loc) {
         if(!requestsAllowed) return alert('Requests are currently disabled by Admin.');
-        openReqModal(key, name, loc);
-    }
-
-    function openReqModal(key, name, loc) {
         activeItemKey = key; activeItemData = {name, loc};
         document.getElementById('reqText').innerText = `Requesting: ${name}`;
         document.getElementById('reqModal').style.display='flex';
@@ -267,21 +291,26 @@
     function sendRequest() {
         const target = document.getElementById('reqPerson').value;
         const toLoc = document.getElementById('reqTargetLoc').value;
-        alert(`Request broadcasted to ${target} to bring the ${activeItemData.name} to ${toLoc}`);
+        alert(`BROADCAST: ${target}, please bring the ${activeItemData.name} to ${toLoc}!`);
         closeModal('reqModal');
     }
 
     function openLocCheck(key, name, loc) {
         activeItemKey = key; activeItemData = {name, loc};
-        document.getElementById('locCheckText').innerText = `Is ${loc} the permanent home for ${name}?`;
+        document.getElementById('locCheckText').innerText = `Set ${loc} as the permanent home for ${name}?`;
         document.getElementById('locYesNo').style.display = 'flex';
         document.getElementById('locSelector').style.display = 'none';
         document.getElementById('locCheckModal').style.display = 'flex';
     }
 
     function confirmDefault(y) {
-        if(y) { db.ref('inventory/'+activeItemKey).update({ homeLoc: activeItemData.loc }); closeModal('locCheckModal'); }
-        else { document.getElementById('locYesNo').style.display='none'; document.getElementById('locSelector').style.display='block'; }
+        if(y) { 
+            db.ref('inventory/'+activeItemKey).update({ homeLoc: activeItemData.loc }); 
+            closeModal('locCheckModal'); 
+        } else { 
+            document.getElementById('locYesNo').style.display='none'; 
+            document.getElementById('locSelector').style.display='block'; 
+        }
     }
 
     function saveNewDefault() {
@@ -297,11 +326,16 @@
 
     function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
     function closeModal(id) { document.getElementById(id).style.display='none'; }
+    
     function saveNewItem() {
         const n = document.getElementById('newItemName').value;
         const l = document.getElementById('newItemLoc').value;
-        if(n) { db.ref('inventory').push({ name: n, location: l, qty: 1, homeLoc: "None" }); closeModal('addItemModal'); }
+        if(n) { 
+            db.ref('inventory').push({ name: n, location: l, qty: 1, homeLoc: "None" }); 
+            closeModal('addItemModal'); 
+        }
     }
+    
     function shiftItem(key, l) { db.ref('inventory/' + key).update({ location: l }); }
     function updateQty(k, c) { db.ref('inventory/'+k+'/qty').transaction(q => (q || 1) + c); }
     function deleteItem(k) { if(confirm("Delete item?")) db.ref('inventory/'+k).remove(); }
