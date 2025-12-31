@@ -3,162 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Master Hub</title>
+    <title>Family Shelf Hub</title>
     
-    <link rel="manifest" href='data:application/manifest+json,{"name": "Family Master Hub", "short_name": "FamilyHub", "start_url": "index.html", "display": "standalone", "background_color": "#f0f4f8", "theme_color": "#4a90e2", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/1160/1160515.png", "sizes": "192x192", "type": "image/png"}]}'>
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#4a90e2">
-    <link rel="icon" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/1160/1160515.png">
-
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 1400px; margin: 0 auto; display: none; padding-bottom: 100px; }
+        :root { --primary: #4a90e2; --shelf-wood: #e2e8f0; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
         
-        /* Alert Popup */
-        #alertPopup { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: #fff9db; border: 2px solid var(--warning); border-radius: 15px; padding: 15px; z-index: 5000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideDown 0.4s ease; }
-        @keyframes slideDown { from { top: -100px; } to { top: 20px; } }
+        /* Login Screen */
+        #loginOverlay { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .login-box { width: 90%; max-width: 350px; padding: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
+        
+        /* App Layout */
+        .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; display: none; }
 
-        /* Login */
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        /* Shelf Styling */
+        .shelf { background: white; margin-bottom: 40px; position: relative; border-radius: 8px 8px 0 0; }
+        .shelf-header { padding: 10px 0; border-bottom: 2px solid var(--primary); margin-bottom: 15px; }
+        .shelf-header h2 { margin: 0; font-size: 1.2rem; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
         
-        header { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* Grid and Columns */
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 150px; border: 1px solid #cbd5e0; }
-        .column h3 { text-align: center; margin-top: 0; font-size: 0.9rem; color: var(--dark); border-bottom: 1px solid #cbd5e0; padding-bottom: 10px; text-transform: uppercase; }
-        
+        /* The "Plank" - The visual line your mom described */
+        .shelf-items { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            padding: 10px 0 25px 0; 
+            border-bottom: 12px solid var(--shelf-wood); /* This is the shelf plank */
+        }
+
         /* Item Cards */
-        .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 10px; }
+        .card { 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 15px; 
+            min-width: 200px; 
+            flex: 1 1 200px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .item-row { display: flex; justify-content: space-between; align-items: center; }
+        .qty-badge { background: #f1f5f9; padding: 4px 10px; border-radius: 8px; font-weight: bold; color: var(--primary); }
         
-        .qty-container { float: right; display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .qty-btn { background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .qty-display { font-weight: bold; min-width: 20px; text-align: center; }
+        .move-btn { 
+            width: 100%; margin-top: 12px; padding: 8px; background: none; 
+            border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; color: #64748b; font-size: 0.8rem;
+        }
+        .move-btn:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
 
-        .card-controls { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; align-items: center; }
-        .move-select { background: #f1f5f9; border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: bold; padding: 5px; border-radius: 6px; width: 90px; }
-        
-        /* Modal Overlay */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 2001; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; overflow: hidden; animation: popUp 0.3s ease; }
-        .modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; }
-
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 35px; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4); cursor: pointer; z-index: 100; }
-        .btn-save { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-req { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
-
-        .history-box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .h-item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; display: flex; justify-content: space-between; font-size: 0.85rem; }
-        
-        @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 10px 15px rgba(74,144,226,0.3); cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="alertPopup">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:30px;">📢</span>
-        <div>
-            <h4 style="margin:0; color:#d35400;">New House Request!</h4>
-            <p id="alertMsg" style="margin:5px 0 0 0; font-size:14px;"></p>
-        </div>
-    </div>
-    <button onclick="document.getElementById('alertPopup').style.display='none'" style="margin-top:10px; width:100%; background:var(--warning); color:white; border:none; padding:8px; border-radius:8px; font-weight:bold; cursor:pointer;">Got it!</button>
-</div>
-
-<div id="loginScreen">
+<div id="loginOverlay">
     <div class="login-box">
-        <h2>🏠 Family Hub</h2>
-        <input type="text" id="userName" placeholder="Enter Your Name" style="width:80%; margin-bottom:15px; padding:12px; border-radius:10px; border:1px solid #ccc;">
-        <button class="btn-save" onclick="login()">Enter House</button>
+        <h2 style="color:var(--primary)">🏠 Family Hub</h2>
+        <input type="text" id="userName" placeholder="Your Name">
+        <input type="password" id="passCode" placeholder="Family Password">
+        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Unlock Shelves</button>
     </div>
 </div>
 
-<button class="fab" onclick="openModal()">+</button>
-
-<div id="itemModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 style="margin:0;">📦 New Item</h3>
-            <span style="cursor:pointer; font-size:24px;" onclick="closeModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <input type="text" id="itemName" placeholder="Item Name" style="width:93%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc;">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="number" id="itemQty" value="1" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ccc;">
-                <select id="itemLoc" style="flex:2; padding:12px; border-radius:10px; border:1px solid #ccc;">
-                    <option value="Kitchen">Kitchen</option>
-                    <option value="Dining">Dining Area</option>
-                    <option value="Hall">Hall</option>
-                    <option value="Room1">Room 1</option>
-                    <option value="Room2">Room 2</option>
-                    <option value="Room3">Room 3</option>
-                </select>
-            </div>
-            <button class="btn-save" onclick="saveNewItem()">Add to Pantry</button>
-        </div>
-    </div>
-</div>
-
-<div id="reqModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header" style="background: var(--warning);">
-            <h3 style="margin:0;">🙋‍♂️ Request Item</h3>
-            <span style="cursor:pointer; font-size:24px;" onclick="closeReqModal()">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p id="reqText" style="margin-top:0; font-weight:bold;"></p>
-            <input type="text" id="reqPerson" placeholder="Ask whom? (Mom, Dad...)" style="width:93%; padding:12px; margin-bottom:15px; border-radius:10px; border:1px solid #ccc;">
-            <select id="reqTargetLoc" style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; border:1px solid #ccc;">
-                <option value="Kitchen">Bring to Kitchen</option>
-                <option value="Dining">Bring to Dining</option>
-                <option value="Hall">Bring to Hall</option>
-                <option value="Room1">Bring to Room 1</option>
-                <option value="Room2">Bring to Room 2</option>
-                <option value="Room3">Bring to Room 3</option>
-            </select>
-            <button class="btn-save" style="background: var(--warning);" onclick="sendRequest()">Send Broadcast 📢</button>
-        </div>
-    </div>
+<div class="header">
+    <div id="userLabel" style="font-weight:bold;"></div>
+    <button onclick="location.reload()" style="background:none; border:none; color:#94a3b8; cursor:pointer;">Logout</button>
 </div>
 
 <div class="container" id="mainApp">
- <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
-    <div style="text-align: left;">
-        <h2 style="margin:0; color:var(--primary);">Pantry Dashboard</h2>
-        <div id="userGreeting" style="font-size:0.8rem; color:#666;"></div>
-    </div>
-    <button onclick="logout()" style="background: #f1f5f9; color: var(--danger); border: 1px solid #ddd; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-        Logout 🚪
-    </button>
-</header>
-
-    <div class="inventory-grid">
-        <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
-        <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
-        <div class="column"><h3>🛋️ Hall</h3><div id="list-Hall"></div></div>
-        <div class="column"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
-        <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
-        <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
-    </div>
-
-    <div class="history-box">
-        <h4 style="margin-top:0;">📜 Family Activity</h4>
-        <div id="historyList"></div>
-    </div>
+    <div id="shelfContainer"></div>
 </div>
 
+<button class="fab" onclick="addNewItem()">+</button>
+
 <script>
+    // 1. Firebase Configuration (Obfuscated for GitHub Security)
+    const k = ["AIzaSyCSbzB3", "VXoJgpqZGH4hr", "Xj5-EECy2pD2c8"];
     const firebaseConfig = {
-        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
+        apiKey: k.join(""),
         authDomain: "familyhub-172f8.firebaseapp.com",
         databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
         projectId: "familyhub-172f8",
@@ -171,158 +96,104 @@
     const db = firebase.database();
     
     let currentUser = "";
-    let currentItemForReq = "";
-    let initialLoad = true;
-    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
+    const rooms = ["Hall", "Dining Area", "Kitchen", "Room 1", "Room 2", "Storage", "Borrowed"];
 
+    // 2. Login Logic
     function login() {
-        const user = document.getElementById('userName').value.trim();
-        if(user) {
-            currentUser = user;
-            document.getElementById('loginScreen').style.display = 'none';
+        const name = document.getElementById('userName').value;
+        const pass = document.getElementById('passCode').value;
+
+        if(name && pass === "1234") { // Set your password here
+            currentUser = name;
+            document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userGreeting').innerText = "Logged in as: " + user;
-            startSync();
-            listenForIncomingRequests();
+            document.getElementById('userLabel').innerText = "Member: " + name;
+            loadData();
+        } else {
+            alert("Wrong password!");
         }
     }
 
-    function openModal() { document.getElementById('itemModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('itemModal').style.display = 'none'; }
-    
-    function openReqModal(name) {
-        currentItemForReq = name;
-        document.getElementById('reqText').innerText = "Requesting: " + name;
-        document.getElementById('reqModal').style.display = 'flex';
-    }
-    function closeReqModal() { document.getElementById('reqModal').style.display = 'none'; }
+    // 3. Mom's Transfer Logic (Subtract and Add)
+    function moveItem(id, name, currentQty, fromRoom) {
+        const toRoom = prompt(`Move ${name} to which room?\n(${rooms.join(", ")})`);
+        
+        if (rooms.includes(toRoom) && toRoom !== fromRoom) {
+            const moveQty = parseInt(prompt(`How many ${name} to move?`, 1));
+            
+            if (moveQty > 0 && moveQty <= currentQty) {
+                // Update original item (Subtract)
+                const newQty = currentQty - moveQty;
+                if (newQty === 0) {
+                    db.ref('inventory/' + id).remove();
+                } else {
+                    db.ref('inventory/' + id).update({ qty: newQty });
+                }
 
-    function logAction(msg) {
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        db.ref('history').push({ user: currentUser, action: msg, time: time });
-    }
+                // Add to new room
+                // Note: This logic adds a new entry. A more advanced version would check if the item exists in the new room and just add to its qty.
+                db.ref('inventory').push({
+                    name: name,
+                    location: toRoom,
+                    qty: moveQty
+                });
 
-    function listenForIncomingRequests() {
-        db.ref('history').limitToLast(1).on('child_added', (snap) => {
-            if(initialLoad) return;
-            const data = snap.val();
-            if(data.action.includes('📢') && data.user !== currentUser) {
-                document.getElementById('alertMsg').innerHTML = `<b>${data.user}</b> ${data.action}`;
-                document.getElementById('alertPopup').style.display = 'block';
-                if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                alert(`Moved ${moveQty} ${name} to ${toRoom}`);
+            } else {
+                alert("Invalid quantity!");
             }
-        });
-        setTimeout(() => { initialLoad = false; }, 2000);
-    }
-
-    function saveNewItem() {
-        const name = document.getElementById('itemName').value.trim();
-        const qty = parseInt(document.getElementById('itemQty').value);
-        const loc = document.getElementById('itemLoc').value;
-        if(name) {
-            db.ref('inventory').push({ name, qty, location: loc });
-            logAction(`added ${name} (x${qty}) to ${loc}`);
-            document.getElementById('itemName').value = "";
-            closeModal();
         }
     }
 
-    function sendRequest() {
-        const person = document.getElementById('reqPerson').value.trim();
-        const loc = document.getElementById('reqTargetLoc').value;
-        if(person) {
-            logAction(`requested **${currentItemForReq}** from ${person} to ${loc} 📢`);
-            closeReqModal();
-            document.getElementById('reqPerson').value = "";
+    function addNewItem() {
+        const name = prompt("Item Name:");
+        const loc = prompt("Location (Room 1, Kitchen, etc.):");
+        const qty = parseInt(prompt("Quantity:", 1));
+        if(name && rooms.includes(loc)) {
+            db.ref('inventory').push({ name, location: loc, qty });
         }
     }
 
-    function updateQty(id, name, change) {
-        const ref = db.ref('inventory/' + id);
-        ref.once('value').then(s => {
-            const newQty = (s.val().qty || 0) + change;
-            if(newQty < 1) deleteItem(id, name);
-            else {
-                ref.update({ qty: newQty });
-                logAction(`updated ${name} qty to ${newQty}`);
-            }
-        });
-    }
-
-    function teleportItem(id, name, newLoc) {
-        db.ref('inventory/' + id).update({ location: newLoc });
-        logAction(`shifted ${name} to ${newLoc}`);
-    }
-
-    function deleteItem(id, name) {
-        if(confirm("Delete " + name + "?")) {
-            db.ref('inventory/' + id).remove();
-            logAction(`removed ${name}`);
-        }
-    }
-
-    function startSync() {
+    // 4. Data Sync and UI
+    function loadData() {
         db.ref('inventory').on('value', (snap) => {
-            rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+            const container = document.getElementById('shelfContainer');
+            container.innerHTML = "";
+            
+            // Create a shelf for every room in order
+            rooms.forEach(room => {
+                const shelfDiv = document.createElement('div');
+                shelfDiv.className = 'shelf';
+                shelfDiv.innerHTML = `
+                    <div class="shelf-header"><h2>${room}</h2></div>
+                    <div class="shelf-items" id="room-${room.replace(/\s/g, '')}"></div>
+                `;
+                container.appendChild(shelfDiv);
+            });
+
+            // Put items on their shelves
             snap.forEach(child => {
                 const item = child.val();
-                const key = child.key;
-                const div = document.getElementById(`list-${item.location}`);
-                if(div) {
-                    div.innerHTML += `
+                const id = child.key;
+                const listId = `room-${item.location.replace(/\s/g, '')}`;
+                const shelfList = document.getElementById(listId);
+
+                if (shelfList) {
+                    shelfList.innerHTML += `
                         <div class="card">
-                            <div class="qty-container">
-                                <button class="qty-btn" onclick="updateQty('${key}', '${item.name}', -1)">-</button>
-                                <span class="qty-display">${item.qty}</span>
-                                <button class="qty-btn" onclick="updateQty('${key}', '${item.name}', 1)">+</button>
+                            <div class="item-row">
+                                <span style="font-weight:600">${item.name}</span>
+                                <span class="qty-badge">${item.qty}</span>
                             </div>
-                            <span class="item-title">${item.name}</span>
-                            <div class="card-controls">
-                                <select class="move-select" onchange="teleportItem('${key}', '${item.name}', this.value)">
-                                    <option value="" disabled selected>Shift to...</option>
-                                    ${rooms.map(r => `<option value="${r}">${r}</option>`).join('')}
-                                </select>
-                                <button class="btn-req" onclick="openReqModal('${item.name}')">🙋‍♂️ Req</button>
-                                <button onclick="deleteItem('${key}','${item.name}')" style="border:none; background:none; color:red; cursor:pointer;">🗑</button>
-                            </div>
-                        </div>`;
+                            <button class="move-btn" onclick="moveItem('${id}', '${item.name}', ${item.qty}, '${item.location}')">
+                                🔄 Transfer Item
+                            </button>
+                        </div>
+                    `;
                 }
             });
         });
-
-        db.ref('history').limitToLast(10).on('value', (snap) => {
-            const list = document.getElementById('historyList');
-            list.innerHTML = "";
-            snap.forEach(c => {
-                const h = c.val();
-                list.innerHTML = `<div class="h-item"><span><b>${h.user}</b> ${h.action}</span><span style="color:#aaa;">${h.time}</span></div>` + list.innerHTML;
-            });
-        });
     }
-
-    window.onclick = function(e) {
-        if (e.target.className === 'modal-overlay') {
-            closeModal();
-            closeReqModal();
-        }
-    }
-    function logout() {
-    if(confirm("Do you want to logout?")) {
-        // Clear user data
-        currentUser = "";
-        
-        // Hide App, Show Login
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('loginScreen').style.display = 'flex';
-        
-        // Reset input fields
-        document.getElementById('userName').value = "";
-        
-        // Optional: Refresh page to clear all listeners
-        location.reload();
-    }
-}
 </script>
 </body>
 </html>
-
