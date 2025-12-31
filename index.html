@@ -106,7 +106,24 @@
     <div class="family-status-bar" id="familyStatus">
         <span style="color:#7f8c8d; padding-right:5px;">Statuses:</span>
     </div>
-
+<div class="notice-board" style="background: #fff9c4; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 2px dashed #fbc02d;">
+    <h3 style="margin-top:0; color: #f57f17; display: flex; justify-content: space-between;">
+        📌 Notice Board
+        <button id="addNoticeBtn" onclick="openNoticeModal()" style="background:#f57f17; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">+</button>
+    </h3>
+    <div id="noticeList" style="display: flex; flex-direction: column; gap: 8px;">
+        </div>
+</div>
+    <div id="noticeModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>📢 Post a Notice</h3>
+        <input type="text" id="noticeText" placeholder="What's the update?">
+        <div style="display:flex; gap:10px;">
+            <button onclick="saveNotice()" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:bold;">Post</button>
+            <button onclick="closeNoticeModal()" style="flex:1; background:none; border:none; color:grey;">Cancel</button>
+        </div>
+    </div>
+</div>
     <div class="inventory-grid">
         <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
         <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
@@ -370,8 +387,45 @@
             snap.forEach(c => { const h = c.val(); list.innerHTML = `<div class="h-item"><span><b>${h.user}</b> ${h.action}</span><span style="color:#aaa;">${h.time}</span></div>` + list.innerHTML; });
         });
     }
+    function openNoticeModal() { document.getElementById('noticeModal').style.display = 'flex'; }
+function closeNoticeModal() { document.getElementById('noticeModal').style.display = 'none'; }
+
+function saveNotice() {
+    const text = document.getElementById('noticeText').value.trim();
+    if(text) {
+        const time = new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        db.ref('notices').push({ text, user: currentUser, time });
+        logAction(`posted a notice: "${text}"`);
+        closeNoticeModal();
+        document.getElementById('noticeText').value = "";
+    }
+}
+
+// Add this to your startSync() function
+function syncNotices() {
+    db.ref('notices').on('value', snap => {
+        const list = document.getElementById('noticeList');
+        list.innerHTML = "";
+        const isGuest = currentUser.toLowerCase() === "guest";
+        
+        snap.forEach(c => {
+            const n = c.val();
+            const deleteBtn = isGuest ? "" : `<span onclick="db.ref('notices/${c.key}').remove()" style="color:red; cursor:pointer; font-weight:bold; margin-left:10px;">&times;</span>`;
+            
+            list.innerHTML += `
+                <div style="background:white; padding:10px; border-radius:8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); font-size:0.9rem;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <b>${n.user}:</b>
+                        <span>${n.time} ${deleteBtn}</span>
+                    </div>
+                    <div style="margin-top:5px;">${n.text}</div>
+                </div>`;
+        });
+    });
+}
 </script>
 </body>
 </html>
+
 
 
