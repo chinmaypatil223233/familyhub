@@ -12,52 +12,43 @@
         :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
         
-        /* Fixed Login Alignment */
-        #loginScreen { 
-            position: fixed; inset: 0; background: var(--primary); 
-            display: flex; justify-content: center; align-items: center; z-index: 3000; 
-        }
-        .login-box { 
-            background: white; padding: 40px 30px; border-radius: 20px; 
-            text-align: center; width: 85%; max-width: 350px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
+        /* Centered Login */
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 3000; }
+        .login-box { background: white; padding: 40px 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
         .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
         
-        /* Status Shelf */
+        /* Status Bar */
         .status-shelf { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: white; border-radius: 15px; }
         .user-chip { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; white-space: nowrap; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 600; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .dot-free { background: var(--success); box-shadow: 0 0 8px var(--success); }
         .dot-busy { background: var(--danger); }
 
-        /* Free/Busy Slot Control */
+        /* Status Controls */
         .status-panel { background: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border); }
         .status-btn-row { display: flex; gap: 10px; margin-top: 10px; }
-        .status-btn { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s; }
+        .status-btn { padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; flex: 1; }
 
-        /* Card Elements */
+        /* Inventory Cards */
         .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .item-name { font-size: 1.1rem; font-weight: bold; }
         .default-prompt { color: var(--primary); font-size: 0.75rem; text-decoration: underline; cursor: pointer; display: block; margin: 5px 0; }
-        
         .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
-        .qty-btn { background: var(--primary); color: white; border: none; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; }
+        .qty-btn { background: var(--primary); color: white; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; }
 
         .control-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
         .shift-select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e0; flex: 1; font-size: 0.8rem; }
-        .btn-req { background: var(--warning); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; }
-
-        /* Grid */
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; }
+        .btn-req { background: var(--warning); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
         /* Modals */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2001; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
-        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; }
-        #nightlyPopup { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; padding: 20px; color: white; text-align: center; }
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-sizing: border-box; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; }
+        
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -65,16 +56,8 @@
 <div id="loginScreen">
     <div class="login-box">
         <h2 style="color:var(--primary); margin-top:0;">🏠 Family Hub</h2>
-        <input type="text" id="userName" placeholder="Type Your Name" style="width:100%; padding:15px; margin-bottom:20px; border-radius:10px; border:1px solid #ddd; box-sizing: border-box; font-size: 1rem;">
-        <button onclick="login()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; font-size: 1rem; cursor:pointer;">Enter House</button>
-    </div>
-</div>
-
-<div id="nightlyPopup">
-    <div style="background: #2d3748; padding: 30px; border-radius: 20px; border: 2px solid var(--warning); width: 100%; max-width: 400px;">
-        <h2 style="color:var(--warning);">🌙 Nightly Return</h2>
-        <div id="misplacedList" style="margin:20px 0; text-align:left; font-size:1rem; color: #cbd5e0;"></div>
-        <button onclick="document.getElementById('nightlyPopup').style.display='none'" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">I'm on it!</button>
+        <input type="text" id="userName" placeholder="Type Your Name">
+        <button onclick="login()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enter House</button>
     </div>
 </div>
 
@@ -88,10 +71,10 @@
     <div class="status-shelf" id="familyStatuses"></div>
 
     <div class="status-panel">
-        <h4 style="margin:0; color:var(--dark)">My Status</h4>
+        <h4 style="margin:0;">My Availability</h4>
         <div class="status-btn-row">
-            <button class="status-btn" style="background:var(--success); color:white;" onclick="updateMyStatus('Free')">Set Free</button>
-            <button class="status-btn" style="background:var(--danger); color:white;" onclick="updateMyStatus('Busy')">Set Busy</button>
+            <button class="status-btn" style="background:var(--success); color:white;" onclick="updateMyStatus('Free')">Free</button>
+            <button class="status-btn" style="background:var(--danger); color:white;" onclick="updateMyStatus('Busy')">Busy</button>
         </div>
     </div>
 
@@ -105,22 +88,53 @@
     </div>
 </div>
 
+<div id="reqModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">🙋‍♂️ Request Item</h3>
+        <p id="reqText" style="font-weight:bold; color:var(--primary)"></p>
+        <label>Who to ask?</label>
+        <select id="reqPerson"></select>
+        <label>Deliver to?</label>
+        <select id="reqTargetLoc">
+            <option value="Kitchen">Kitchen</option><option value="Dining">Dining Area</option>
+            <option value="Hall">Hall</option><option value="Room1">Room 1</option>
+            <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
+        </select>
+        <button class="status-btn" style="background:var(--warning); color:white; width:100%;" onclick="sendRequest()">Send Request</button>
+        <button onclick="closeModal('reqModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
+    </div>
+</div>
+
+<div id="addItemModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">📦 Add New Item</h3>
+        <input type="text" id="newItemName" placeholder="Item Name (e.g. Remote)">
+        <label>Current Location</label>
+        <select id="newItemLoc">
+            <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option>
+            <option value="Hall">Hall</option><option value="Room1">Room 1</option>
+            <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
+        </select>
+        <button class="status-btn" style="background:var(--success); color:white; width:100%;" onclick="saveNewItem()">Add Item</button>
+        <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
+    </div>
+</div>
+
 <div id="locCheckModal" class="modal-overlay">
     <div class="modal-content">
-        <h3 style="margin-top:0;">📍 Set Default Home</h3>
+        <h3>📍 Set Default Home</h3>
         <p id="locCheckText"></p>
         <div id="locYesNo" style="display:flex; gap:10px;">
-            <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Yes</button>
-            <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px; font-weight:bold;">No</button>
+            <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Yes</button>
+            <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px;">No</button>
         </div>
-        <div id="locSelector" style="display:none; margin-top:20px;">
-            <p>Pick the permanent home:</p>
-            <select id="newDefaultLoc" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px;">
+        <div id="locSelector" style="display:none; margin-top:15px;">
+            <select id="newDefaultLoc">
                 <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option>
                 <option value="Hall">Hall</option><option value="Room1">Room 1</option>
                 <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
             </select>
-            <button onclick="saveNewDefault()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Save Home</button>
+            <button class="status-btn" style="background:var(--primary); color:white; width:100%;" onclick="saveNewDefault()">Save Home</button>
         </div>
     </div>
 </div>
@@ -150,20 +164,14 @@
             document.getElementById('mainApp').style.display = 'block';
             updateMyStatus('Free');
             startSync();
-            setInterval(checkNightlyAudit, 60000); 
         }
     }
 
-    function updateMyStatus(status) {
-        if(currentUser) db.ref('users/' + currentUser).update({ status: status });
-    }
+    function updateMyStatus(s) { if(currentUser) db.ref('users/' + currentUser).update({ status: s }); }
 
     function startSync() {
         db.ref('inventory').on('value', (snap) => {
-            ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"].forEach(r => {
-                const el = document.getElementById(`list-${r}`);
-                if(el) el.innerHTML = "";
-            });
+            ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"].forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
             snap.forEach(child => {
                 const item = child.val();
                 const key = child.key;
@@ -186,8 +194,8 @@
                                     <option value="Hall">Hall</option><option value="Room1">Room 1</option>
                                     <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
                                 </select>
-                                <button class="btn-req">Req</button>
-                                <span onclick="deleteItem('${key}')" style="cursor:pointer; font-size: 1.2rem;">🗑️</span>
+                                <button class="btn-req" onclick="openReqModal('${key}', '${item.name}', '${item.location}')">Req</button>
+                                <span onclick="deleteItem('${key}')" style="cursor:pointer; margin-left:5px;">🗑️</span>
                             </div>
                         </div>`;
                 }
@@ -197,66 +205,64 @@
         const family = ["Mom", "Dad", "Chinmay", "Test"];
         db.ref('users').on('value', (snap) => {
             const shelf = document.getElementById('familyStatuses'); shelf.innerHTML = "";
+            const reqSel = document.getElementById('reqPerson'); reqSel.innerHTML = "";
             const states = snap.val() || {};
             family.forEach(name => {
                 const isFree = (states[name] && states[name].status === 'Free');
                 shelf.innerHTML += `<div class="user-chip"><span class="dot ${isFree?'dot-free':'dot-busy'}"></span>${name}</div>`;
+                if(name !== currentUser) reqSel.innerHTML += `<option value="${name}">${name}</option>`;
             });
         });
     }
 
-    function openLocCheck(key, name, loc) {
+    // Modal Controls
+    function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
+    function openReqModal(key, name, loc) {
         activeItemKey = key;
-        activeItemData = { name, loc };
-        document.getElementById('locCheckText').innerText = `${name} is in ${loc}. Is this its default home?`;
+        activeItemData = {name, loc};
+        document.getElementById('reqText').innerText = `${name} in ${loc}`;
+        document.getElementById('reqModal').style.display='flex';
+    }
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+
+    // Logic Functions
+    function saveNewItem() {
+        const n = document.getElementById('newItemName').value;
+        const l = document.getElementById('newItemLoc').value;
+        if(n) {
+            db.ref('inventory').push({ name: n, location: l, qty: 1, homeLoc: "None" });
+            closeModal('addItemModal');
+            document.getElementById('newItemName').value = "";
+        }
+    }
+
+    function sendRequest() {
+        const target = document.getElementById('reqPerson').value;
+        const toLoc = document.getElementById('reqTargetLoc').value;
+        db.ref('history').push({ user: currentUser, action: `asked ${target} to bring ${activeItemData.name} to ${toLoc}` });
+        alert("Request sent to " + target);
+        closeModal('reqModal');
+    }
+
+    function shiftItem(key, l) { db.ref('inventory/' + key).update({ location: l }); }
+    function updateQty(k, c) { db.ref('inventory/'+k+'/qty').transaction(q => (q || 1) + c); }
+    function deleteItem(k) { if(confirm("Delete?")) db.ref('inventory/'+k).remove(); }
+
+    function openLocCheck(key, name, loc) {
+        activeItemKey = key; activeItemData = {name, loc};
+        document.getElementById('locCheckText').innerText = `Is ${loc} the permanent home for ${name}?`;
         document.getElementById('locYesNo').style.display = 'flex';
         document.getElementById('locSelector').style.display = 'none';
         document.getElementById('locCheckModal').style.display = 'flex';
     }
-
-    function confirmDefault(isYes) {
-        if(isYes) {
-            db.ref('inventory/' + activeItemKey).update({ homeLoc: activeItemData.loc });
-            document.getElementById('locCheckModal').style.display = 'none';
-        } else {
-            document.getElementById('locYesNo').style.display = 'none';
-            document.getElementById('locSelector').style.display = 'block';
-        }
+    function confirmDefault(y) {
+        if(y) { db.ref('inventory/'+activeItemKey).update({ homeLoc: activeItemData.loc }); closeModal('locCheckModal'); }
+        else { document.getElementById('locYesNo').style.display='none'; document.getElementById('locSelector').style.display='block'; }
     }
-
     function saveNewDefault() {
-        const newHome = document.getElementById('newDefaultLoc').value;
-        db.ref('inventory/' + activeItemKey).update({ homeLoc: newHome });
-        document.getElementById('locCheckModal').style.display = 'none';
-    }
-
-    function shiftItem(key, newLoc) { db.ref('inventory/' + key).update({ location: newLoc }); }
-    function updateQty(key, change) { db.ref('inventory/'+key+'/qty').transaction(q => (q || 1) + change); }
-    function deleteItem(key) { if(confirm("Delete item?")) db.ref('inventory/'+key).remove(); }
-    
-    function openItemModal() {
-        const name = prompt("Item Name:");
-        const loc = prompt("Where is it now? (Kitchen, Hall, Dining, Room1, Room2, Room3)");
-        if(name && loc) db.ref('inventory').push({ name, location: loc, qty: 1, homeLoc: "None" });
-    }
-
-    function checkNightlyAudit() {
-        const now = new Date();
-        if(now.getHours() === 21 && now.getMinutes() === 30) {
-            db.ref('inventory').once('value', snap => {
-                let list = [];
-                snap.forEach(c => {
-                    const i = c.val();
-                    if(i.homeLoc && i.homeLoc !== "None" && i.location !== i.homeLoc) {
-                        list.push(`• ${i.name} belongs in ${i.homeLoc}`);
-                    }
-                });
-                if(list.length > 0) {
-                    document.getElementById('misplacedList').innerHTML = list.join("<br>");
-                    document.getElementById('nightlyPopup').style.display = 'flex';
-                }
-            });
-        }
+        const h = document.getElementById('newDefaultLoc').value;
+        db.ref('inventory/'+activeItemKey).update({ homeLoc: h });
+        closeModal('locCheckModal');
     }
 </script>
 </body>
