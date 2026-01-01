@@ -24,12 +24,12 @@
         .dot-free { background: var(--success); }
         .dot-busy { background: var(--danger); }
         .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; display: flex; flex-direction: column; gap: 5px; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        .sub-room-area { margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 1px dashed var(--border); }
+        .sub-room-area { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px dashed var(--border); }
         .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
         .qty-btn { background: var(--primary); color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; }
-        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: auto; padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-sizing: border-box; }
@@ -94,7 +94,6 @@
             <span>Audit Time:</span>
             <div style="display:flex; gap:5px;"><input type="time" id="reminderTimeInput" style="width:100px; padding:4px;"><button onclick="saveReminderTime()" style="padding:5px; background:var(--dark); color:white; border:none; border-radius:5px;">Save</button></div>
         </div>
-        <span class="admin-section-title">USER MANAGEMENT</span>
         <div id="adminUserList" style="margin-top:5px;"></div>
     </div>
 
@@ -190,9 +189,11 @@
     function startSync() {
         db.ref('settings').on('value', snap => { const d = snap.val() || {}; document.getElementById('reminderTimeInput').value = d.reminderTime || "21:30"; });
 
-        // Sync Sub-Rooms
-        db.ref('rooms').on('value', snap => {
-            allRooms = snap.val() || {};
+        // Combined sync for Rooms and Items to ensure containers exist before items render
+        db.ref('rooms').on('value', roomSnap => {
+            allRooms = roomSnap.val() || {};
+            
+            // 1. Clear and Rebuild Sub-Room Containers
             document.querySelectorAll('.sub-room-area').forEach(e => e.remove());
             Object.keys(allRooms).forEach(key => {
                 const r = allRooms[key];
@@ -200,29 +201,28 @@
                 if(parentCol) {
                     const subDiv = document.createElement('div');
                     subDiv.className = "sub-room-area";
-                    subDiv.id = `list-${key}`;
-                    subDiv.innerHTML = `<h4 style="margin:0; font-size:0.8rem; color:var(--primary)">↳ ${r.name}</h4>`;
+                    subDiv.innerHTML = `<h4 style="margin:0; font-size:0.8rem; color:var(--primary)">↳ ${r.name}</h4><div id="list-${key}"></div>`;
                     parentCol.insertBefore(subDiv, parentCol.querySelector('.btn-sub') || null);
                 }
             });
             updateAllDropdowns();
+
+            // 2. Render Items into Base Rooms and Sub-Room Divs
+            db.ref('inventory').on('value', invSnap => {
+                baseRooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+                Object.keys(allRooms).forEach(k => {
+                    const el = document.getElementById(`list-${k}`);
+                    if(el) el.innerHTML = "";
+                });
+
+                invSnap.forEach(child => {
+                    const item = child.val();
+                    const target = document.getElementById(`list-${item.location}`);
+                    if(target) target.innerHTML += renderCard(child.key, item);
+                });
+            });
         });
 
-        // Sync Items
-        db.ref('inventory').on('value', snap => {
-            baseRooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
-            document.querySelectorAll('.sub-room-area').forEach(e => {
-                const title = e.querySelector('h4').outerHTML;
-                e.innerHTML = title;
-            });
-            snap.forEach(child => {
-                const item = child.val();
-                const target = document.getElementById(`list-${item.location}`);
-                if(target) target.innerHTML += renderCard(child.key, item);
-            });
-        });
-
-        // Sync Users
         db.ref('users').on('value', snap => {
             const shelf = document.getElementById('familyStatuses'); const adminUL = document.getElementById('adminUserList'); const reqS = document.getElementById('reqPerson');
             shelf.innerHTML = ""; adminUL.innerHTML = ""; reqS.innerHTML = "";
