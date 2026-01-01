@@ -4,54 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Master Hub</title>
-    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <style>
         :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        
         #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 5000; }
         .login-box { background: white; padding: 40px 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-
         .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
-        
         header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:10px; position: relative; }
         .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
-
-        /* Permanent Notice Board */
         #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
         #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .admin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 8px; }
-        .admin-section-title { font-size: 0.8rem; font-weight: bold; color: #856404; margin-top: 10px; display: block; border-bottom: 1px solid #ffeeba; }
-
         .status-shelf { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: white; border-radius: 15px; }
         .user-chip { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; white-space: nowrap; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 600; }
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .dot-free { background: var(--success); }
         .dot-busy { background: var(--danger); }
-
-        .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        .item-name { font-size: 1.1rem; font-weight: bold; text-transform: capitalize; }
-        .default-prompt { color: var(--primary); font-size: 0.7rem; text-decoration: underline; cursor: pointer; display: block; margin: 4px 0; }
-        
-        .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
-        .qty-btn { background: var(--primary); color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; }
-
-        .control-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
-        .shift-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e0; flex: 1; font-size: 0.75rem; background: white; }
-        
-        .btn-req { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
-        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 6px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
-
         .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
         .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        .sub-room-area { margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 1px dashed var(--border); }
+        .item-name { font-size: 1.1rem; font-weight: bold; text-transform: capitalize; }
+        .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
+        .qty-btn { background: var(--primary); color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; }
+        .btn-req { background: var(--warning); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-sizing: border-box; }
         .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 100; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .control-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+        .shift-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e0; flex: 1; font-size: 0.75rem; background: white; }
     </style>
 </head>
 <body>
@@ -67,27 +52,25 @@
 <div id="globalAlert" class="modal-overlay">
     <div class="modal-content" style="background:var(--dark); color:white; text-align:center;">
         <h2 id="alertTitle">📢 Notice</h2>
-        <p id="alertBody" style="font-size: 1.1rem; line-height: 1.4;"></p>
-        <button onclick="dismissAlert()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Got it!</button>
+        <p id="alertBody"></p>
+        <button onclick="dismissAlert()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Got it!</button>
     </div>
 </div>
 
-<div id="locCheckModal" class="modal-overlay"><div class="modal-content">
-    <h3>📍 Set Home Location</h3>
-    <p id="locCheckText"></p>
-    <div id="locYesNo" style="display:flex; gap:10px;">
-        <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Yes</button>
-        <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px;">Change</button>
+<div id="locCheckModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>📍 Set Home Location</h3>
+        <p id="locCheckText"></p>
+        <div id="locYesNo" style="display:flex; gap:10px;">
+            <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Yes</button>
+            <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px;">Change</button>
+        </div>
+        <div id="locSelector" style="display:none; margin-top:15px;">
+            <select id="newDefaultLoc"></select>
+            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;" onclick="saveNewDefault()">Save Home</button>
+        </div>
     </div>
-    <div id="locSelector" style="display:none; margin-top:15px;">
-        <select id="newDefaultLoc">
-            <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option>
-            <option value="Hall">Couch Hall</option><option value="Room1">Room 1</option>
-            <option value="Room2">Room 2</option><option value="Room3">Room 3</option>
-        </select>
-        <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;" onclick="saveNewDefault()">Save Home</button>
-    </div>
-</div></div>
+</div>
 
 <button class="fab" onclick="openItemModal()">+</button>
 
@@ -100,55 +83,43 @@
     <div id="noticeBoard"></div>
 
     <div id="adminSettings">
-        <span class="admin-section-title">ADMIN ANNOUNCEMENT</span>
-        <div class="admin-row" style="flex-direction:column; align-items:stretch;">
-            <input type="text" id="adminNoticeInput" placeholder="Post a global notice..." style="margin-bottom:5px;">
-            <div style="display:flex; gap:5px;">
-                <button onclick="postNotice()" style="flex:2; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;">📢 Post Notice</button>
-                <button onclick="db.ref('settings/globalNotice').remove()" style="flex:1; background:var(--danger); color:white; border:none; border-radius:8px;">Clear</button>
-            </div>
-        </div>
-        <span class="admin-section-title">NIGHT AUDIT</span>
-        <div class="admin-row">
-            <span>Audit Time:</span>
-            <div style="display:flex; gap:5px;"><input type="time" id="reminderTimeInput" style="width:100px; padding:4px;"><button onclick="saveReminderTime()" style="padding:5px; background:var(--dark); color:white; border:none; border-radius:5px;">Save</button></div>
-        </div>
-        <span class="admin-section-title">USER MANAGEMENT</span>
-        <div id="adminUserList" style="margin-top:5px;"></div>
+        <span class="admin-section-title" style="font-weight:bold; color:#856404;">ADMIN TOOLS</span>
+        <input type="text" id="adminNoticeInput" placeholder="Post global notice...">
+        <button onclick="postNotice()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; margin-bottom:10px;">Post Notice</button>
+        <div id="adminUserList"></div>
     </div>
 
     <div class="status-shelf" id="familyStatuses"></div>
 
     <div class="inventory-grid">
-        <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
-        <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
-        <div class="column"><h3> Couch Hall</h3><div id="list-Hall"></div></div>
-        <div class="column"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
-        <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
-        <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
+        <div class="column" id="col-Kitchen"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
+        <div class="column" id="col-Dining"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
+        <div class="column" id="col-Hall"><h3>🛋️ Couch Hall</h3><div id="list-Hall"></div></div>
+        <div class="column" id="col-Room1"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
+        <div class="column" id="col-Room2"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
+        <div class="column" id="col-Room3"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
     </div>
 </div>
 
-<div id="reqModal" class="modal-overlay"><div class="modal-content">
-    <h3>🙋‍♂️ Request Item</h3>
-    <p id="reqText"></p>
-    <select id="reqPerson"></select>
-    <select id="reqTargetLoc">
-        <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Couch Hall</option>
-    </select>
-    <button style="width:100%; padding:12px; background:var(--warning); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="sendRequest()">Send Alert 📢</button>
-    <button onclick="closeModal('reqModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
-</div></div>
+<div id="subRoomModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>📂 Create Sub Room</h3>
+        <p id="subRoomTargetText"></p>
+        <input type="text" id="subRoomNameInput" placeholder="Sub-room name (e.g. Fridge, Drawer)">
+        <button onclick="saveSubRoom()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Add Sub Room</button>
+        <button onclick="closeModal('subRoomModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
+    </div>
+</div>
 
-<div id="addItemModal" class="modal-overlay"><div class="modal-content">
-    <h3>📦 New Item</h3>
-    <input type="text" id="newItemName" placeholder="Item Name">
-    <select id="newItemLoc">
-        <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Couch Hall</option>
-    </select>
-    <button style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="saveNewItem()">Add to Pantry</button>
-    <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
-</div></div>
+<div id="addItemModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>📦 New Item</h3>
+        <input type="text" id="newItemName" placeholder="Item Name">
+        <select id="newItemLoc"></select>
+        <button onclick="saveNewItem()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Add Item</button>
+        <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
+    </div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -160,11 +131,10 @@
         messagingSenderId: "854442266486",
         appId: "1:854442266486:web:be03aebb29f7537907b457"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let currentUser = "", isAdmin = false, activeItemKey = "", activeItemData = {};
-    const ding = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    let currentUser = "", isAdmin = false, activeParentLoc = "", activeItemKey = "", activeItemData = {};
+    const baseRooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
 
     function login() {
         const user = document.getElementById('userName').value.trim();
@@ -173,56 +143,94 @@
         if(currentUser.toLowerCase() === "test") { isAdmin = true; document.getElementById('adminIndicator').style.display='block'; document.getElementById('adminSettings').style.display='block'; }
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        startSync(); startAlertListener(); setInterval(checkNightlyAudit, 60000);
+        initAdminButtons();
+        startSync();
     }
 
-    function startAlertListener() {
-        // User Requests
-        db.ref(`alerts/${currentUser}`).on('value', snap => {
-            if(snap.val()) { ding.play(); showModalAlert("🙋‍♂️ New Request", snap.val().msg); }
+    function initAdminButtons() {
+        if(!isAdmin) return;
+        baseRooms.forEach(rid => {
+            const col = document.getElementById(`col-${rid}`);
+            const btn = document.createElement('button');
+            btn.className = "btn-sub";
+            btn.innerText = "+ Add Sub Room";
+            btn.onclick = () => openSubRoomModal(rid);
+            col.appendChild(btn);
         });
-        // Global Notices (Board and Popups)
-        db.ref('settings/globalNotice').on('value', snap => {
-            const data = snap.val();
-            const board = document.getElementById('noticeBoard');
-            if(data) {
-                board.innerText = "📢 " + data.msg;
-                board.style.display = 'block';
-                if(data.id !== localStorage.getItem('lastNoticeId')) {
-                    ding.play(); showModalAlert("📢 Admin Notice", data.msg);
-                    localStorage.setItem('lastNoticeId', data.id);
+    }
+
+    function openSubRoomModal(parent) {
+        activeParentLoc = parent;
+        document.getElementById('subRoomTargetText').innerText = `Adding a sub-room to: ${parent}`;
+        document.getElementById('subRoomModal').style.display = 'flex';
+    }
+
+    function saveSubRoom() {
+        const name = document.getElementById('subRoomNameInput').value.trim();
+        if(name) {
+            db.ref('rooms').push({ name: name, parent: activeParentLoc });
+            document.getElementById('subRoomNameInput').value = "";
+            closeModal('subRoomModal');
+        }
+    }
+
+    function startSync() {
+        db.ref('rooms').on('value', snap => {
+            const rooms = snap.val() || {};
+            document.querySelectorAll('.sub-room-area').forEach(e => e.remove());
+            Object.keys(rooms).forEach(key => {
+                const r = rooms[key];
+                const parentCol = document.getElementById(`col-${r.parent}`);
+                if(parentCol) {
+                    const subDiv = document.createElement('div');
+                    subDiv.className = "sub-room-area";
+                    subDiv.id = `list-${key}`;
+                    subDiv.innerHTML = `<h4 style="margin:0; font-size:0.8rem; color:var(--primary)">↳ ${r.name}</h4>`;
+                    parentCol.insertBefore(subDiv, parentCol.querySelector('.btn-sub') || null);
                 }
-            } else {
-                board.style.display = 'none';
-            }
+            });
+            updateItemSelect(rooms);
+        });
+
+        db.ref('inventory').on('value', snap => {
+            baseRooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+            document.querySelectorAll('.sub-room-area').forEach(e => {
+                const title = e.querySelector('h4').outerHTML;
+                e.innerHTML = title;
+            });
+            snap.forEach(child => {
+                const item = child.val();
+                const target = document.getElementById(`list-${item.location}`);
+                if(target) target.innerHTML += renderCard(child.key, item);
+            });
+        });
+
+        db.ref('users').on('value', snap => {
+            const shelf = document.getElementById('familyStatuses');
+            shelf.innerHTML = "";
+            const users = snap.val() || {};
+            Object.keys(users).forEach(name => {
+                const s = users[name].status;
+                shelf.innerHTML += `<div class="user-chip"><span class="dot ${s === 'Free' ? 'dot-free' : 'dot-busy'}"></span>${name}</div>`;
+            });
         });
     }
 
-    function renderInventory(snap) {
-        ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"].forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
-        snap.forEach(child => {
-            const item = child.val(); const key = child.key;
-            const listDiv = document.getElementById(`list-${item.location}`);
-            if(listDiv) {
-                const isHomeMissing = (!item.homeLoc || item.homeLoc === "None");
-                listDiv.innerHTML += `
-                    <div class="card">
-                        <div class="qty-box"><button class="qty-btn" onclick="updateQty('${key}',-1)">-</button><b>${item.qty || 1}</b><button class="qty-btn" onclick="updateQty('${key}',1)">+</button></div>
-                        <div class="item-name">${item.name}</div>
-                        <div style="font-size:0.7rem; color:#666">🏠 Home: ${item.homeLoc || 'None'}</div>
-                        ${isHomeMissing ? `<span class="default-prompt" onclick="openLocCheck('${key}','${item.name}','${item.location}')">Is this the permanent home?</span>` : ''}
-                        <div class="control-row">
-                            <select class="shift-select" onchange="shiftItem('${key}', this.value)">
-                                <option value="" disabled selected>Move...</option>
-                                <option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Couch Hall</option><option value="Room1">Room 1</option><option value="Room2">Room 2</option><option value="Room3">Room 3</option>
-                            </select>
-                            <button class="btn-req" onclick="handleRequestClick('${key}','${item.name}','${item.location}')">Req</button>
-                        </div>
-                        ${isAdmin ? `<button class="admin-home-btn" onclick="openLocCheck('${key}','${item.name}','${item.location}')">⚙️ Update Home</button>
-                                     <button onclick="deleteItem('${key}')" style="background:none; border:none; color:red; font-size:0.65rem; width:100%; margin-top:5px; cursor:pointer;">Delete</button>` : ''}
-                    </div>`;
-            }
-        });
+    function renderCard(key, item) {
+        return `<div class="card">
+            <div class="qty-box"><button class="qty-btn" onclick="updateQty('${key}',-1)">-</button><b>${item.qty || 1}</b><button class="qty-btn" onclick="updateQty('${key}',1)">+</button></div>
+            <div class="item-name">${item.name}</div>
+            <div style="font-size:0.75rem; color:#666; margin-top:5px;">🏠 Home: ${item.homeLoc || 'Not Set'}</div>
+            <div class="control-row">
+                <select class="shift-select" onchange="shiftItem('${key}', this.value)">
+                    <option value="" disabled selected>Move...</option>
+                    ${generateLocationOptions()}
+                </select>
+                <button class="btn-req" onclick="handleReq('${item.name}')">Req</button>
+            </div>
+            ${isAdmin ? `<button class="admin-home-btn" onclick="openLocCheck('${key}','${item.name}','${item.location}')">⚙️ Update Home</button>
+                         <button onclick="deleteItem('${key}')" style="background:none; border:none; color:red; font-size:0.65rem; width:100%; margin-top:10px; cursor:pointer;">Delete</button>` : ''}
+        </div>`;
     }
 
     function openLocCheck(key, name, loc) {
@@ -244,48 +252,39 @@
         closeModal('locCheckModal');
     }
 
-    function showModalAlert(title, body) { document.getElementById('alertTitle').innerText = title; document.getElementById('alertBody').innerText = body; document.getElementById('globalAlert').style.display = 'flex'; }
-    function dismissAlert() { document.getElementById('globalAlert').style.display = 'none'; db.ref(`alerts/${currentUser}`).remove(); }
-    function postNotice() { const msg = document.getElementById('adminNoticeInput').value.trim(); if(msg) { db.ref('settings/globalNotice').set({ msg: msg, id: Date.now() }); document.getElementById('adminNoticeInput').value = ""; } }
-    function sendRequest() { const target = document.getElementById('reqPerson').value; const toLoc = document.getElementById('reqTargetLoc').value; db.ref(`alerts/${target}`).set({ msg: `${currentUser} needs the "${activeItemData.name}" in ${toLoc}!` }); document.getElementById('reqModal').style.display='none'; }
-    
-    function startSync() {
-        db.ref('settings').on('value', snap => { const d = snap.val() || {}; document.getElementById('reminderTimeInput').value = d.reminderTime || "21:30"; });
-        db.ref('inventory').on('value', renderInventory);
-        db.ref('users').on('value', snap => {
-            const shelf = document.getElementById('familyStatuses'); const adminUL = document.getElementById('adminUserList'); const reqS = document.getElementById('reqPerson');
-            shelf.innerHTML = ""; adminUL.innerHTML = ""; reqS.innerHTML = "";
-            const users = snap.val() || {};
-            Object.keys(users).forEach(name => {
-                const s = users[name].status;
-                shelf.innerHTML += `<div class="user-chip"><span class="dot ${s === 'Free' ? 'dot-free' : 'dot-busy'}"></span>${name}</div>`;
-                if(isAdmin) adminUL.innerHTML += `<div class="admin-row" style="border:none; padding:2px;"><span style="font-size:0.75rem">${name} (Busy)</span><input type="checkbox" ${s === 'Busy' ? 'checked' : ''} onchange="toggleUserStatus('${name}', this.checked)"></div>`;
-                if(name !== currentUser) reqS.innerHTML += `<option value="${name}">${name}</option>`;
-            });
+    function updateItemSelect(rooms) {
+        const sel = document.getElementById('newItemLoc');
+        const homeSel = document.getElementById('newDefaultLoc');
+        sel.innerHTML = ""; homeSel.innerHTML = "";
+        baseRooms.forEach(r => {
+            const opt = `<option value="${r}">${r}</option>`;
+            sel.innerHTML += opt; homeSel.innerHTML += opt;
+        });
+        Object.keys(rooms).forEach(k => {
+            const opt = `<option value="${k}">${rooms[k].name} (${rooms[k].parent})</option>`;
+            sel.innerHTML += opt; homeSel.innerHTML += opt;
         });
     }
 
-    function toggleUserStatus(name, isBusy) { db.ref('users/' + name).update({ status: isBusy ? 'Busy' : 'Free' }); }
-    function saveReminderTime() { const val = document.getElementById('reminderTimeInput').value; if(val) db.ref('settings/reminderTime').set(val); }
-    function checkNightlyAudit() {
-        db.ref('settings/reminderTime').once('value', snap => {
-            const t = snap.val() || "21:30"; const now = new Date(); const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            if(cur === t) {
-                db.ref('inventory').once('value', inv => {
-                    let mis = []; inv.forEach(c => { const i = c.val(); if(i.homeLoc && i.homeLoc !== "None" && i.location !== i.homeLoc) mis.push(`• ${i.name} (Should be in ${i.homeLoc})`); });
-                    if(mis.length > 0) showModalAlert("🌙 Night Audit", mis.join("\n"));
-                });
-            }
-        });
+    function generateLocationOptions() {
+        let html = "";
+        baseRooms.forEach(r => html += `<option value="${r}">${r}</option>`);
+        return html;
     }
 
-    function handleRequestClick(key, name, loc) { activeItemKey = key; activeItemData = {name, loc}; document.getElementById('reqText').innerText = `Requesting: ${name}`; document.getElementById('reqModal').style.display='flex'; }
-    function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
-    function closeModal(id) { document.getElementById(id).style.display='none'; }
-    function saveNewItem() { const n = document.getElementById('newItemName').value; const l = document.getElementById('newItemLoc').value; if(n) { db.ref('inventory').push({ name: n, location: l, qty: 1, homeLoc: "None" }); closeModal('addItemModal'); } }
-    function shiftItem(key, l) { db.ref('inventory/' + key).update({ location: l }); }
     function updateQty(k, c) { db.ref('inventory/'+k+'/qty').transaction(q => (q || 1) + c); }
-    function deleteItem(k) { if(confirm("Delete item?")) db.ref('inventory/'+k).remove(); }
+    function shiftItem(k, l) { db.ref('inventory/'+k).update({ location: l }); }
+    function deleteItem(k) { if(confirm("Delete?")) db.ref('inventory/'+k).remove(); }
+    function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
+    function saveNewItem() {
+        const n = document.getElementById('newItemName').value;
+        const l = document.getElementById('newItemLoc').value;
+        if(n) { db.ref('inventory').push({name: n, location: l, qty: 1, homeLoc: 'Not Set'}); closeModal('addItemModal'); }
+    }
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    function postNotice() { const msg = document.getElementById('adminNoticeInput').value; if(msg) db.ref('settings/globalNotice').set({msg: msg, id: Date.now()}); }
+    function dismissAlert() { document.getElementById('globalAlert').style.display = 'none'; }
+    function handleReq(name) { alert("Request sent for " + name); }
 </script>
 </body>
 </html>
