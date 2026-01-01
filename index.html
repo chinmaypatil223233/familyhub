@@ -14,131 +14,84 @@
         .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
         header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:10px; position: relative; }
         .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
-        #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; }
         #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .admin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 8px; }
-        .admin-section-title { font-size: 0.8rem; font-weight: bold; color: #856404; margin-top: 10px; display: block; border-bottom: 1px solid #ffeeba; }
-        .status-shelf { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: white; border-radius: 15px; }
-        .user-chip { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 12px; white-space: nowrap; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 600; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .dot-free { background: var(--success); }
-        .dot-busy { background: var(--danger); }
+        .admin-section-title { font-size: 0.8rem; font-weight: bold; color: #856404; margin-top: 10px; display: block; }
         .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 120px; display: flex; flex-direction: column; gap: 5px; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-top: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
-        .sub-room-area { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px dashed var(--border); }
-        .qty-box { float: right; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 8px; border-radius: 8px; }
-        .qty-btn { background: var(--primary); color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; }
-        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: auto; padding: 8px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px); }
-        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-sizing: border-box; }
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 100; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 200px; display: flex; flex-direction: column; }
+        .sub-room-area { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 12px; border: 1px dashed var(--border); min-height: 50px; }
+        .card { background: white; padding: 12px; border-radius: 12px; margin-top: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .qty-box { float: right; display: flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 8px; }
+        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: auto; padding: 8px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; }
+        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 6px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
     <div class="login-box">
-        <h2 style="color:var(--primary); margin-top:0;">🏠 Family Hub</h2>
+        <h2>🏠 Family Hub</h2>
         <input type="text" id="userName" placeholder="Type Your Name">
-        <button onclick="login()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold;">Enter House</button>
+        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;">Enter</button>
     </div>
 </div>
 
 <div id="globalAlert" class="modal-overlay">
     <div class="modal-content" style="background:var(--dark); color:white; text-align:center;">
-        <h2 id="alertTitle">📢 Notice</h2>
-        <p id="alertBody" style="font-size: 1.1rem; line-height: 1.4;"></p>
-        <button onclick="dismissAlert()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Got it!</button>
+        <h2 id="alertTitle"></h2>
+        <p id="alertBody"></p>
+        <button onclick="dismissAlert()" style="width:100%; padding:10px; background:var(--success); color:white; border:none; border-radius:8px;">Got it!</button>
     </div>
 </div>
 
-<div id="locCheckModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>📍 Set Home Location</h3>
-        <p id="locCheckText"></p>
-        <div id="locYesNo" style="display:flex; gap:10px;">
-            <button onclick="confirmDefault(true)" style="flex:1; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Yes</button>
-            <button onclick="confirmDefault(false)" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:10px;">Change</button>
-        </div>
-        <div id="locSelector" style="display:none; margin-top:15px;">
-            <select id="newDefaultLoc"></select>
-            <button style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;" onclick="saveNewDefault()">Save Home</button>
-        </div>
+<div class="container" id="mainApp">
+    <header><h2>Pantry Dashboard</h2><div id="adminIndicator" class="admin-badge">ADMIN</div></header>
+    <div id="noticeBoard"></div>
+    <div id="adminSettings">
+        <span class="admin-section-title">ADMIN PANEL</span>
+        <input type="text" id="adminNoticeInput" placeholder="Post notice...">
+        <button onclick="postNotice()" style="width:100%; padding:8px; background:var(--primary); color:white; border-radius:8px; border:none;">Post Notice</button>
+        <div id="adminUserList"></div>
+    </div>
+    <div class="inventory-grid">
+        <div class="column" id="col-Kitchen"><h3>🍳 Kitchen</h3><div class="main-list" id="list-Kitchen"></div></div>
+        <div class="column" id="col-Dining"><h3>🍽️ Dining</h3><div class="main-list" id="list-Dining"></div></div>
+        <div class="column" id="col-Hall"><h3>🛋️ Couch Hall</h3><div class="main-list" id="list-Hall"></div></div>
+        <div class="column" id="col-Room1"><h3>🛌 Room 1</h3><div class="main-list" id="list-Room1"></div></div>
+        <div class="column" id="col-Room2"><h3>🛌 Room 2</h3><div class="main-list" id="list-Room2"></div></div>
+        <div class="column" id="col-Room3"><h3>🛌 Room 3</h3><div class="main-list" id="list-Room3"></div></div>
     </div>
 </div>
 
 <button class="fab" onclick="openItemModal()">+</button>
 
-<div class="container" id="mainApp">
-    <header>
-        <h2 style="margin:0; color:var(--primary);">Pantry Dashboard</h2>
-        <div id="adminIndicator" class="admin-badge">ADMIN</div>
-    </header>
+<div id="addItemModal" class="modal-overlay"><div class="modal-content">
+    <h3>📦 New Item</h3>
+    <input type="text" id="newItemName" placeholder="Item Name">
+    <select id="newItemLoc"></select>
+    <button onclick="saveNewItem()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Add Item</button>
+    <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none;">Cancel</button>
+</div></div>
 
-    <div id="noticeBoard"></div>
+<div id="subRoomModal" class="modal-overlay"><div class="modal-content">
+    <h3>📂 Create Sub Room</h3>
+    <input type="text" id="subRoomNameInput" placeholder="Sub-room name">
+    <button onclick="saveSubRoom()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Create</button>
+    <button onclick="closeModal('subRoomModal')" style="width:100%; margin-top:10px; border:none;">Cancel</button>
+</div></div>
 
-    <div id="adminSettings">
-        <span class="admin-section-title">ADMIN ANNOUNCEMENT</span>
-        <div class="admin-row" style="flex-direction:column; align-items:stretch;">
-            <input type="text" id="adminNoticeInput" placeholder="Post a global notice..." style="margin-bottom:5px;">
-            <div style="display:flex; gap:5px;">
-                <button onclick="postNotice()" style="flex:2; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; font-weight:bold;">📢 Post Notice</button>
-                <button onclick="db.ref('settings/globalNotice').remove()" style="flex:1; background:var(--danger); color:white; border:none; border-radius:8px;">Clear</button>
-            </div>
-        </div>
-        <span class="admin-section-title">NIGHT AUDIT</span>
-        <div class="admin-row">
-            <span>Audit Time:</span>
-            <div style="display:flex; gap:5px;"><input type="time" id="reminderTimeInput" style="width:100px; padding:4px;"><button onclick="saveReminderTime()" style="padding:5px; background:var(--dark); color:white; border:none; border-radius:5px;">Save</button></div>
-        </div>
-        <div id="adminUserList" style="margin-top:5px;"></div>
-    </div>
-
-    <div class="status-shelf" id="familyStatuses"></div>
-
-    <div class="inventory-grid">
-        <div class="column" id="col-Kitchen"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
-        <div class="column" id="col-Dining"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
-        <div class="column" id="col-Hall"><h3>🛋️ Couch Hall</h3><div id="list-Hall"></div></div>
-        <div class="column" id="col-Room1"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
-        <div class="column" id="col-Room2"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
-        <div class="column" id="col-Room3"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
-    </div>
-</div>
-
-<div id="reqModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>🙋‍♂️ Request Item</h3>
-        <p id="reqText"></p>
-        <select id="reqPerson"></select>
-        <select id="reqTargetLoc"></select>
-        <button style="width:100%; padding:12px; background:var(--warning); color:white; border:none; border-radius:10px; font-weight:bold;" onclick="sendRequest()">Send Alert 📢</button>
-        <button onclick="closeModal('reqModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
-    </div>
-</div>
-
-<div id="subRoomModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>📂 Create Sub Room</h3>
-        <p id="subRoomTargetText"></p>
-        <input type="text" id="subRoomNameInput" placeholder="Sub-room name (e.g. Fridge, Drawer)">
-        <button onclick="saveSubRoom()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Add Sub Room</button>
-        <button onclick="closeModal('subRoomModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
-    </div>
-</div>
-
-<div id="addItemModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>📦 New Item</h3>
-        <input type="text" id="newItemName" placeholder="Item Name">
-        <select id="newItemLoc"></select>
-        <button onclick="saveNewItem()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px; font-weight:bold;">Add Item</button>
-        <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none; background:none;">Cancel</button>
-    </div>
-</div>
+<div id="reqModal" class="modal-overlay"><div class="modal-content">
+    <h3>🙋‍♂️ Request Item</h3>
+    <p id="reqText"></p>
+    <select id="reqPerson"></select>
+    <select id="reqTargetLoc"></select>
+    <button onclick="sendRequest()" style="width:100%; padding:12px; background:var(--warning); color:white; border:none; border-radius:10px;">Send Request</button>
+    <button onclick="closeModal('reqModal')" style="width:100%; margin-top:10px; border:none;">Cancel</button>
+</div></div>
 
 <script>
     const firebaseConfig = {
@@ -152,157 +105,114 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let currentUser = "", isAdmin = false, activeParentLoc = "", activeItemKey = "", activeItemData = {}, allRooms = {};
-    const ding = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    const baseRooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3"];
+    let currentUser = "", isAdmin = false, activeParent = "", allRooms = {};
 
     function login() {
-        const user = document.getElementById('userName').value.trim();
-        if(!user) return;
-        currentUser = user;
-        if(currentUser.toLowerCase() === "test") { 
-            isAdmin = true; 
-            document.getElementById('adminIndicator').style.display='block'; 
-            document.getElementById('adminSettings').style.display='block'; 
-        }
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        if(isAdmin) initAdminButtons();
+        currentUser = document.getElementById('userName').value.trim();
+        if(!currentUser) return;
+        if(currentUser.toLowerCase()==="test") { isAdmin=true; document.getElementById('adminIndicator').style.display='block'; document.getElementById('adminSettings').style.display='block'; }
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('mainApp').style.display='block';
         startSync();
-        startAlertListener();
-        setInterval(checkNightlyAudit, 60000);
-    }
-
-    function initAdminButtons() {
-        baseRooms.forEach(rid => {
-            const col = document.getElementById(`col-${rid}`);
-            if(!col.querySelector('.btn-sub')) {
-                const btn = document.createElement('button');
-                btn.className = "btn-sub";
-                btn.innerText = "+ Add Sub Room";
-                btn.onclick = () => openSubRoomModal(rid);
-                col.appendChild(btn);
-            }
-        });
     }
 
     function startSync() {
-        db.ref('settings').on('value', snap => { const d = snap.val() || {}; document.getElementById('reminderTimeInput').value = d.reminderTime || "21:30"; });
-
-        // Combined sync for Rooms and Items to ensure containers exist before items render
+        // Sync Rooms FIRST
         db.ref('rooms').on('value', roomSnap => {
             allRooms = roomSnap.val() || {};
-            
-            // 1. Clear and Rebuild Sub-Room Containers
+            // Clear all columns and sub-rooms
             document.querySelectorAll('.sub-room-area').forEach(e => e.remove());
+            document.querySelectorAll('.main-list').forEach(e => e.innerHTML = "");
+
+            // Rebuild sub-room containers
             Object.keys(allRooms).forEach(key => {
                 const r = allRooms[key];
                 const parentCol = document.getElementById(`col-${r.parent}`);
                 if(parentCol) {
-                    const subDiv = document.createElement('div');
-                    subDiv.className = "sub-room-area";
-                    subDiv.innerHTML = `<h4 style="margin:0; font-size:0.8rem; color:var(--primary)">↳ ${r.name}</h4><div id="list-${key}"></div>`;
-                    parentCol.insertBefore(subDiv, parentCol.querySelector('.btn-sub') || null);
+                    const div = document.createElement('div');
+                    div.className = 'sub-room-area';
+                    div.innerHTML = `<h4 style="margin:0; font-size:0.8rem; color:var(--primary)">↳ ${r.name}</h4><div id="list-${key}"></div>`;
+                    parentCol.appendChild(div);
                 }
             });
-            updateAllDropdowns();
 
-            // 2. Render Items into Base Rooms and Sub-Room Divs
-            db.ref('inventory').on('value', invSnap => {
-                baseRooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
-                Object.keys(allRooms).forEach(k => {
-                    const el = document.getElementById(`list-${k}`);
-                    if(el) el.innerHTML = "";
+            // Ensure Admin buttons are at the bottom
+            if(isAdmin) {
+                ["Kitchen","Dining","Hall","Room1","Room2","Room3"].forEach(id => {
+                    const col = document.getElementById(`col-${id}`);
+                    if(!col.querySelector('.btn-sub')) {
+                        const b = document.createElement('button');
+                        b.className='btn-sub'; b.innerText='+ Add Sub Room';
+                        b.onclick=() => { activeParent=id; document.getElementById('subRoomModal').style.display='flex'; };
+                        col.appendChild(b);
+                    }
                 });
+            }
 
+            // Sync Items SECOND
+            db.ref('inventory').on('value', invSnap => {
+                // Clear all item lists before rendering
+                document.querySelectorAll('[id^="list-"]').forEach(e => e.innerHTML = "");
                 invSnap.forEach(child => {
                     const item = child.val();
                     const target = document.getElementById(`list-${item.location}`);
                     if(target) target.innerHTML += renderCard(child.key, item);
                 });
             });
+            updateAllDropdowns();
         });
 
-        db.ref('users').on('value', snap => {
-            const shelf = document.getElementById('familyStatuses'); const adminUL = document.getElementById('adminUserList'); const reqS = document.getElementById('reqPerson');
-            shelf.innerHTML = ""; adminUL.innerHTML = ""; reqS.innerHTML = "";
-            const users = snap.val() || {};
-            Object.keys(users).forEach(name => {
-                const s = users[name].status;
-                shelf.innerHTML += `<div class="user-chip"><span class="dot ${s === 'Free' ? 'dot-free' : 'dot-busy'}"></span>${name}</div>`;
-                if(isAdmin) adminUL.innerHTML += `<div class="admin-row" style="border:none; padding:2px;"><span style="font-size:0.75rem">${name} (Busy)</span><input type="checkbox" ${s === 'Busy' ? 'checked' : ''} onchange="toggleUserStatus('${name}', this.checked)"></div>`;
-                if(name !== currentUser) reqS.innerHTML += `<option value="${name}">${name}</option>`;
-            });
+        // Notice Listener
+        db.ref('settings/globalNotice').on('value', snap => {
+            const d = snap.val();
+            if(d) {
+                document.getElementById('noticeBoard').innerText = "📢 " + d.msg;
+                document.getElementById('noticeBoard').style.display = 'block';
+            }
         });
     }
 
     function renderCard(key, item) {
         return `<div class="card">
-            <div class="qty-box"><button class="qty-btn" onclick="updateQty('${key}',-1)">-</button><b>${item.qty || 1}</b><button class="qty-btn" onclick="updateQty('${key}',1)">+</button></div>
-            <div class="item-name">${item.name}</div>
-            <div style="font-size:0.75rem; color:#666; margin-top:5px;">🏠 Home: ${allRooms[item.homeLoc]?.name || item.homeLoc || 'Not Set'}</div>
-            <div style="display: flex; align-items: center; gap: 6px; margin-top: 10px;">
-                <select class="shift-select" onchange="shiftItem('${key}', this.value)">
-                    <option value="" disabled selected>Move...</option>
-                    ${generateAllLocationOptions()}
-                </select>
-                <button class="btn-req" onclick="handleRequestClick('${key}','${item.name}','${item.location}')">Req</button>
-            </div>
-            ${isAdmin ? `<button class="admin-home-btn" onclick="openLocCheck('${key}','${item.name}','${item.location}')">⚙️ Update Home</button>
-                         <button onclick="deleteItem('${key}')" style="background:none; border:none; color:red; font-size:0.65rem; width:100%; margin-top:10px; cursor:pointer;">Delete</button>` : ''}
+            <div class="qty-box"><button onclick="updateQty('${key}',-1)">-</button><b>${item.qty}</b><button onclick="updateQty('${key}',1)">+</button></div>
+            <div style="font-weight:bold">${item.name}</div>
+            <div style="font-size:0.7rem; color:gray">Home: ${allRooms[item.homeLoc]?.name || item.homeLoc}</div>
+            <select onchange="moveItem('${key}', this.value)" style="font-size:0.7rem; padding:4px;">
+                <option disabled selected>Move to...</option>
+                ${generateLocOptions()}
+            </select>
+            ${isAdmin ? `<button class="admin-home-btn" onclick="setHome('${key}','${item.location}')">Update Home</button>` : ''}
         </div>`;
     }
 
-    function startAlertListener() {
-        db.ref(`alerts/${currentUser}`).on('value', snap => {
-            if(snap.val()) { ding.play(); showModalAlert("🙋‍♂️ New Request", snap.val().msg); }
-        });
-        db.ref('settings/globalNotice').on('value', snap => {
-            const data = snap.val(); const board = document.getElementById('noticeBoard');
-            if(data) {
-                board.innerText = "📢 " + data.msg; board.style.display = 'block';
-                if(data.id !== localStorage.getItem('lastNoticeId')) { ding.play(); showModalAlert("📢 Admin Notice", data.msg); localStorage.setItem('lastNoticeId', data.id); }
-            } else { board.style.display = 'none'; }
-        });
+    function generateLocOptions() {
+        let h = `<option value="Kitchen">Kitchen</option><option value="Dining">Dining</option><option value="Hall">Hall</option><option value="Room1">Room 1</option><option value="Room2">Room 2</option><option value="Room3">Room 3</option>`;
+        Object.keys(allRooms).forEach(k => h += `<option value="${k}">${allRooms[k].name}</option>`);
+        return h;
     }
 
     function updateAllDropdowns() {
-        const selects = ['newItemLoc', 'newDefaultLoc', 'reqTargetLoc'];
-        selects.forEach(sid => {
-            const el = document.getElementById(sid);
-            if(!el) return;
-            el.innerHTML = "";
-            baseRooms.forEach(r => el.innerHTML += `<option value="${r}">${r}</option>`);
-            Object.keys(allRooms).forEach(k => el.innerHTML += `<option value="${k}">${allRooms[k].name} (${allRooms[k].parent})</option>`);
-        });
+        const sel = document.getElementById('newItemLoc');
+        sel.innerHTML = generateLocOptions();
     }
 
-    function generateAllLocationOptions() {
-        let html = "";
-        baseRooms.forEach(r => html += `<option value="${r}">${r}</option>`);
-        Object.keys(allRooms).forEach(k => html += `<option value="${k}">${allRooms[k].name}</option>`);
-        return html;
+    function saveSubRoom() {
+        const n = document.getElementById('subRoomNameInput').value;
+        if(n) { db.ref('rooms').push({name: n, parent: activeParent}); closeModal('subRoomModal'); }
     }
 
-    function openSubRoomModal(parent) { activeParentLoc = parent; document.getElementById('subRoomTargetText').innerText = `Adding to: ${parent}`; document.getElementById('subRoomModal').style.display = 'flex'; }
-    function saveSubRoom() { const name = document.getElementById('subRoomNameInput').value.trim(); if(name) { db.ref('rooms').push({ name: name, parent: activeParentLoc }); document.getElementById('subRoomNameInput').value = ""; closeModal('subRoomModal'); } }
-    function saveNewItem() { const n = document.getElementById('newItemName').value; const l = document.getElementById('newItemLoc').value; if(n) { db.ref('inventory').push({name: n, location: l, qty: 1, homeLoc: 'Not Set'}); closeModal('addItemModal'); } }
-    function openLocCheck(key, name, loc) { activeItemKey = key; activeItemData = {name, loc}; document.getElementById('locCheckText').innerText = `Set ${allRooms[loc]?.name || loc} as home for ${name}?`; document.getElementById('locYesNo').style.display = 'flex'; document.getElementById('locSelector').style.display = 'none'; document.getElementById('locCheckModal').style.display = 'flex'; }
-    function confirmDefault(y) { if(y) { db.ref('inventory/'+activeItemKey).update({ homeLoc: activeItemData.loc }); closeModal('locCheckModal'); } else { document.getElementById('locYesNo').style.display='none'; document.getElementById('locSelector').style.display='block'; } }
-    function saveNewDefault() { const h = document.getElementById('newDefaultLoc').value; db.ref('inventory/'+activeItemKey).update({ homeLoc: h }); closeModal('locCheckModal'); }
-    function handleRequestClick(key, name, loc) { activeItemKey = key; activeItemData = {name, loc}; document.getElementById('reqText').innerText = `Requesting: ${name}`; document.getElementById('reqModal').style.display='flex'; }
-    function sendRequest() { const target = document.getElementById('reqPerson').value; const toLoc = document.getElementById('reqTargetLoc').value; db.ref(`alerts/${target}`).set({ msg: `${currentUser} needs "${activeItemData.name}" in ${allRooms[toLoc]?.name || toLoc}!` }); closeModal('reqModal'); }
-    function postNotice() { const msg = document.getElementById('adminNoticeInput').value.trim(); if(msg) { db.ref('settings/globalNotice').set({ msg: msg, id: Date.now() }); document.getElementById('adminNoticeInput').value = ""; } }
-    function checkNightlyAudit() { db.ref('settings/reminderTime').once('value', snap => { const t = snap.val() || "21:30"; const now = new Date(); const cur = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; if(cur === t) { db.ref('inventory').once('value', inv => { let mis = []; inv.forEach(c => { const i = c.val(); if(i.homeLoc && i.homeLoc !== "Not Set" && i.location !== i.homeLoc) mis.push(`• ${i.name} (Should be in ${allRooms[i.homeLoc]?.name || i.homeLoc})`); }); if(mis.length > 0) showModalAlert("🌙 Night Audit", mis.join("\n")); }); } }); }
-    function showModalAlert(title, body) { document.getElementById('alertTitle').innerText = title; document.getElementById('alertBody').innerText = body; document.getElementById('globalAlert').style.display = 'flex'; }
-    function dismissAlert() { document.getElementById('globalAlert').style.display = 'none'; db.ref(`alerts/${currentUser}`).remove(); }
-    function toggleUserStatus(name, isBusy) { db.ref('users/' + name).update({ status: isBusy ? 'Busy' : 'Free' }); }
-    function saveReminderTime() { const val = document.getElementById('reminderTimeInput').value; if(val) db.ref('settings/reminderTime').set(val); }
+    function saveNewItem() {
+        const n = document.getElementById('newItemName').value;
+        const l = document.getElementById('newItemLoc').value;
+        if(n) { db.ref('inventory').push({name: n, location: l, qty: 1, homeLoc: l}); closeModal('addItemModal'); }
+    }
+
     function updateQty(k, c) { db.ref('inventory/'+k+'/qty').transaction(q => (q || 1) + c); }
-    function shiftItem(k, l) { db.ref('inventory/'+k).update({ location: l }); }
-    function deleteItem(k) { if(confirm("Delete?")) db.ref('inventory/'+k).remove(); }
+    function moveItem(k, l) { db.ref('inventory/'+k).update({location: l}); }
+    function setHome(k, l) { db.ref('inventory/'+k).update({homeLoc: l}); }
     function openItemModal() { document.getElementById('addItemModal').style.display='flex'; }
     function closeModal(id) { document.getElementById(id).style.display='none'; }
+    function postNotice() { const m = document.getElementById('adminNoticeInput').value; if(m) db.ref('settings/globalNotice').set({msg: m, id: Date.now()}); }
 </script>
 </body>
 </html>
