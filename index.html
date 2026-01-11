@@ -101,40 +101,51 @@
     const rooms = ["Kitchen", "Dining", "Hall", "Store"];
 
     // 3. LOGIN LOGIC
-    function login() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then((result) => {
-            const user = result.user;
+  // 1. TRIGGER LOGIN (No Popups)
+function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    // Use Redirect to bypass all browser blocks 100%
+    auth.signInWithRedirect(provider);
+}
 
-            if (!approvedUsers.includes(user.email)) {
-                document.getElementById('loginBox').innerHTML = `
-                    <h2 style="color:var(--warning)">🚫 Access Restricted</h2>
-                    <p style="font-size:0.8rem;">Account: ${user.email}</p>
-                    <hr style="margin:15px 0; border:0; border-top:1px solid #eee;">
-                    <p style="font-weight:bold;">Waiting for confirmation!</p>
-                    <button onclick="location.reload()" style="margin-top:15px; border:none; color:var(--primary); cursor:pointer; background:none; text-decoration:underline;">Try Another Account</button>
-                `;
-                auth.signOut();
-                return;
-            }
+// 2. THIS RUNS AUTOMATICALLY WHEN YOU RETURN FROM GOOGLE
+auth.getRedirectResult().then((result) => {
+    if (result && result.user) {
+        const user = result.user;
 
-            currentUser = user.displayName;
-            document.getElementById('welcomeText').innerText = `Hello, ${currentUser}`;
+        // Security Whitelist Check
+        const approvedUsers = [
+            "patiladwaitchinmay@gmail.com", 
+            "member.m@gmail.com"
+        ];
 
-            if (user.email === "patiladwaitchinmay@gmail.com") {
-                isAdmin = true;
-                document.getElementById('adminIndicator').style.display = 'block';
-                document.getElementById('adminSettings').style.display = 'block';
-                document.getElementById('adminFab').style.display = 'block';
-            }
+        if (!approvedUsers.includes(user.email)) {
+            document.getElementById('loginBox').innerHTML = `
+                <h2 style="color:var(--danger)">🚫 Access Denied</h2>
+                <p>Waiting for confirmation for: ${user.email}</p>
+                <button onclick="logout()" style="margin-top:10px; cursor:pointer;">Try Again</button>
+            `;
+            auth.signOut();
+            return;
+        }
 
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            startSync();
-        }).catch(err => alert("Popup blocked or closed. Please try again."));
+        // Success - Go to Hub
+        currentUser = user.displayName;
+        document.getElementById('welcomeText').innerText = `Hello, ${currentUser}`;
+        
+        if (user.email === "patiladwaitchinmay@gmail.com") {
+            isAdmin = true;
+            document.getElementById('adminIndicator').style.display = 'block';
+        }
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        startSync();
     }
-
-    // 4. LOGOUT LOGIC
+}).catch((error) => {
+    console.error("Auth Error:", error);
+    alert("Error: " + error.message);
+});  // 4. LOGOUT LOGIC
     function logout() {
         if(confirm("Are you sure you want to sign out?")) {
             auth.signOut().then(() => { window.location.reload(); });
@@ -173,3 +184,4 @@
 </script>
 </body>
 </html>
+
