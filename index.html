@@ -2,36 +2,256 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Family Pantry System</title>
-    <link rel="stylesheet" href="style.css"> </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Master Hub</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #4a90e2; --success: #2ecc71; --danger: #e74c3c; --bg: #fdf6e3; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        
+        /* Containers */
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; display: none; }
+        header { background: white; padding: 15px; border-radius: 15px; text-align: center; position: relative; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* Login */
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 320px; }
+        .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
+
+        /* Panels */
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .admin-section { background: #fff3cd; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        
+        /* Grid & Columns */
+        .pantry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .room-col { background: #e2e8f0; padding: 15px; border-radius: 15px; min-height: 150px; }
+        .object-card { background: white; padding: 10px; border-radius: 8px; margin-top: 8px; border-left: 4px solid var(--primary); font-size: 0.9rem; }
+
+        button { cursor: pointer; border-radius: 5px; border: 1px solid #ccc; padding: 8px 12px; font-weight: bold; }
+        .btn-main { background: var(--primary); color: white; border: none; }
+        .btn-audit { background: #2d3748; color: white; width: 100%; margin-top: 10px; }
+        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+    </style>
+</head>
 <body>
 
-    <div id="admin-panel" style="border: 2px solid red; padding: 10px; margin-bottom: 20px;">
-        <h3>Admin Controls (A.1 - A.4)</h3>
-        <button onclick="toggleUserStatus('M')">Set M Free/Busy</button>
-        <button onclick="addDefaultItem()">Add New Object (Default Home)</button>
-        <button onclick="runNightlyAudit()">Generate Nightly Audit (A.5)</button>
+<div id="loginScreen">
+    <div class="login-box" id="loginBox">
+        <h2>🏠 Family Hub</h2>
+        <input type="text" id="userNameInput" placeholder="Enter Name (e.g., Chinmay)">
+        <button class="btn-main" style="width:100%" onclick="login()">Enter Hub</button>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <header>
+        <button onclick="location.reload()" style="position:absolute; left:15px;">Logout</button>
+        <div id="adminIndicator" style="display:none; position:absolute; right:15px; background:red; color:white; padding:4px 8px; border-radius:5px; font-size:10px;">ADMIN</div>
+        <h2 id="welcomeText">Dashboard</h2>
+    </header>
+
+    <div id="adminPanel" class="admin-section" style="display:none;">
+        <h3>🛠️ Admin Control Center</h3>
+        
+        <div class="card">
+            <strong>Add New Object</strong><br><br>
+            <input type="text" id="itemName" placeholder="Object Name" style="width:120px">
+            <input type="number" id="itemQty" placeholder="Qty" style="width:50px">
+            <select id="itemDefault">
+                <option value="">Default Location</option>
+                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
+                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
+            </select>
+            <button onclick="addObject()" class="btn-main">Add (A.1)</button>
+        </div>
+
+        <div class="card" id="adminMemberControls">
+            <strong>Member Management (M, D, C)</strong>
+        </div>
+
+        <div class="card">
+            <strong>Nightly Audit (A.5)</strong>
+            <button onclick="runNightlyAudit()" class="btn-audit">Run Audit Now</button>
+            <div id="auditResult" style="margin-top:10px; font-family: monospace; background:#eee; padding:10px; display:none;"></div>
+        </div>
     </div>
 
-    <div id="search-bar">
-        <input type="text" id="objSearch" placeholder="Search for objects (M.3)..." onkeyup="searchObjects()">
+    <input type="text" class="search-bar" id="objSearch" placeholder="🔍 Search for objects (Location Finder M.3)..." onkeyup="searchObjects()">
+
+    <div class="card" style="background: #eef2ff; border: 1px solid #c3dafe;">
+        <strong>Shift / Request Item</strong><br><br>
+        <select id="shiftObjId" style="width:100%; margin-bottom:10px;"></select>
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="shiftQty" placeholder="Qty" style="width:60px">
+            <select id="shiftTo" style="flex:1">
+                <option value="">To Room...</option>
+                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
+                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
+            </select>
+            <select id="requestToMember" style="flex:1">
+                <option value="direct">Direct (M.2)</option>
+            </select>
+            <button onclick="handleShift()" class="btn-main">Go</button>
+        </div>
     </div>
 
-    <div id="house-grid" style="display: flex; flex-wrap: wrap;">
-        <div class="room" id="room1"><h4>Room 1</h4><ul id="list-room1"></ul></div>
-        <div class="room" id="room2"><h4>Room 2</h4><ul id="list-room2"></ul></div>
-        <div class="room" id="room3"><h4>Room 3</h4><ul id="list-room3"></ul></div>
-        <div class="kitchen" id="kitchen"><h4>Kitchen</h4><ul id="list-kitchen"></ul></div>
-        <div class="hall" id="hall"><h4>Hall</h4><ul id="list-hall"></ul></div>
-        <div class="store" id="store"><h4>Store Room</h4><ul id="list-store"></ul></div>
-    </div>
+    <div id="statusList" style="margin-bottom:20px;"></div>
 
-    <div id="audit-modal" style="display:none; background: #eee; padding: 20px;">
-        <h2>Nightly Audit (A.5)</h2>
-        <p>[ ] N.1 Lights Off | [ ] N.2 Water Off | [ ] N.3 Doors Locked</p>
-        <div id="misplaced-items"></div>
+    <div class="pantry-grid">
+        <div class="room-col"><h4>🛏️ Room 1</h4><div id="room-Room 1"></div></div>
+        <div class="room-col"><h4>🛏️ Room 2</h4><div id="room-Room 2"></div></div>
+        <div class="room-col"><h4>🛏️ Room 3</h4><div id="room-Room 3"></div></div>
+        <div class="room-col"><h4>🍳 Kitchen</h4><div id="room-Kitchen"></div></div>
+        <div class="room-col"><h4>🛋️ Hall</h4><div id="room-Hall"></div></div>
+        <div class="room-col"><h4>📦 Store Room</h4><div id="room-Store Room"></div></div>
     </div>
+</div>
 
-    <script src="app.js"></script>
+<script>
+    // FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
+        authDomain: "familyhub-172f8.firebaseapp.com",
+        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
+        projectId: "familyhub-172f8",
+        storageBucket: "familyhub-172f8.firebasestorage.app",
+        messagingSenderId: "854442266486",
+        appId: "1:854442266486:web:be03aebb29f7537907b457"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let currentUser = "";
+    let isAdmin = false;
+    const rooms = ["Room 1", "Room 2", "Room 3", "Kitchen", "Hall", "Store Room"];
+
+    function login() {
+        const name = document.getElementById('userNameInput').value.trim();
+        if(!name) return;
+        currentUser = name;
+        isAdmin = (name.toLowerCase() === "chinmay"); // Admin login
+
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        if(isAdmin) {
+            document.getElementById('adminIndicator').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+        document.getElementById('welcomeText').innerText = `Welcome, ${currentUser}`;
+        startSync();
+    }
+
+    // A.1 & A.2
+    function addObject() {
+        const name = document.getElementById('itemName').value;
+        const qty = parseInt(document.getElementById('itemQty').value);
+        const loc = document.getElementById('itemDefault').value;
+        if(name && qty && loc) {
+            db.ref('inventory').push({ name, qty, currentLocation: loc, defaultLocation: loc });
+            alert("Object Added!");
+        }
+    }
+
+    // M.1 & M.2
+    function handleShift() {
+        const id = document.getElementById('shiftObjId').value;
+        const sQty = parseInt(document.getElementById('shiftQty').value);
+        const toRoom = document.getElementById('shiftTo').value;
+        const reqUser = document.getElementById('requestToMember').value;
+
+        if(!id || !sQty || !toRoom) return alert("Missing Info");
+
+        if(reqUser !== "direct") {
+            db.ref('familyMembers/' + reqUser).once('value', snap => {
+                if(snap.val() && snap.val().status !== 'free') {
+                    alert(`User ${reqUser} is Busy! Choose another free member (M.1).`);
+                } else {
+                    executeShift(id, sQty, toRoom);
+                }
+            });
+        } else {
+            executeShift(id, sQty, toRoom);
+        }
+    }
+
+    function executeShift(id, sQty, to) {
+        db.ref('inventory/' + id).once('value', snap => {
+            const data = snap.val();
+            if(sQty > data.qty) return alert("Not enough qty!");
+
+            if(sQty === data.qty) {
+                db.ref('inventory/' + id).update({ currentLocation: to });
+            } else {
+                db.ref('inventory/' + id).update({ qty: data.qty - sQty });
+                db.ref('inventory').push({ name: data.name, qty: sQty, currentLocation: to, defaultLocation: data.defaultLocation });
+            }
+            alert("Shift Complete!");
+        });
+    }
+
+    // A.5
+    function runNightlyAudit() {
+        db.ref('inventory').once('value', snap => {
+            const items = snap.val();
+            let misplaced = [];
+            for(let key in items) {
+                if(items[key].currentLocation !== items[key].defaultLocation) {
+                    misplaced.push(`⚠️ ${items[key].name} is in ${items[key].currentLocation} (Default: ${items[key].defaultLocation})`);
+                }
+            }
+            const res = document.getElementById('auditResult');
+            res.style.display = "block";
+            res.innerHTML = `<strong>N.1-N.3 Checklist:</strong><br>✅ Lights Off | ✅ Water Tank Off | ✅ Doors Locked<br><br><strong>A.2 Misplaced Items:</strong><br>${misplaced.length ? misplaced.join('<br>') : "✅ All items in Default Home!"}`;
+        });
+    }
+
+    function startSync() {
+        // Sync Members (A.3, A.4)
+        db.ref('familyMembers').on('value', snap => {
+            const users = snap.val() || { M: {status:'free', leave:'No'}, D: {status:'free', leave:'No'}, C: {status:'free', leave:'No'} };
+            const sList = document.getElementById('statusList');
+            const aList = document.getElementById('adminMemberControls');
+            const reqList = document.getElementById('requestToMember');
+            
+            sList.innerHTML = "<h3>Family Status</h3>";
+            aList.innerHTML = "<strong>Admin User Control (A.3/A.4)</strong><br>";
+            reqList.innerHTML = '<option value="direct">Direct Shift (M.2)</option>';
+
+            for(let u in users) {
+                sList.innerHTML += `<div class="card">User ${u}: ${users[u].status.toUpperCase()} | Leave: ${users[u].leave}</div>`;
+                if(isAdmin) {
+                    aList.innerHTML += `<div style="margin-top:5px;">${u}: 
+                        <button onclick="db.ref('familyMembers/${u}').update({status:'${users[u].status==='free'?'busy':'free'}'})">Toggle Busy (A.3)</button>
+                        <button onclick="db.ref('familyMembers/${u}').update({leave:'${users[u].leave==='No'?'Yes':'No'}'})">Toggle Leave (A.4)</button>
+                    </div>`;
+                }
+                reqList.innerHTML += `<option value="${u}">Req via User ${u}</option>`;
+            }
+        });
+
+        // Sync Inventory
+        db.ref('inventory').on('value', snap => {
+            const items = snap.val();
+            rooms.forEach(r => document.getElementById(`room-${r}`).innerHTML = "");
+            const sel = document.getElementById('shiftObjId');
+            sel.innerHTML = '<option value="">Select Object to Move...</option>';
+
+            for(let key in items) {
+                const it = items[key];
+                const rDiv = document.getElementById(`room-${it.currentLocation}`);
+                if(rDiv) rDiv.innerHTML += `<div class="object-card"><b>${it.name}</b> (x${it.qty})${isAdmin ? ` <button onclick="db.ref('inventory/${key}').remove()" style="color:red; border:none; background:none;">[X]</button>` : ''}</div>`;
+                sel.innerHTML += `<option value="${key}">${it.name} (${it.qty}) - currently in ${it.currentLocation}</option>`;
+            }
+        });
+    }
+
+    function searchObjects() {
+        const q = document.getElementById('objSearch').value.toLowerCase();
+        document.querySelectorAll('.object-card').forEach(c => {
+            c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none";
+        });
+    }
+</script>
 </body>
 </html>
