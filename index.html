@@ -7,109 +7,115 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #4a90e2; --success: #2ecc71; --danger: #e74c3c; --bg: #fdf6e3; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
-        
-        /* Containers */
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; display: none; }
-        header { background: white; padding: 15px; border-radius: 15px; text-align: center; position: relative; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* Login */
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 320px; }
-        .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
-
-        /* Panels */
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .admin-section { background: #fff3cd; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        
-        /* Grid & Columns */
-        .pantry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .room-col { background: #e2e8f0; padding: 15px; border-radius: 15px; min-height: 150px; }
-        .object-card { background: white; padding: 10px; border-radius: 8px; margin-top: 8px; border-left: 4px solid var(--primary); font-size: 0.9rem; }
-
-        button { cursor: pointer; border-radius: 5px; border: 1px solid #ccc; padding: 8px 12px; font-weight: bold; }
-        .btn-main { background: var(--primary); color: white; border: none; }
-        .btn-audit { background: #2d3748; color: white; width: 100%; margin-top: 10px; }
-        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 5000; }
+        .login-box { background: white; padding: 40px 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
+        header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:10px; position: relative; }
+        .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
+        #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; }
+        #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+        .admin-section-title { font-size: 0.8rem; font-weight: bold; color: #856404; margin-top: 10px; display: block; }
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 200px; display: flex; flex-direction: column; }
+        .sub-room-area { margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.6); border-radius: 12px; border: 1px dashed var(--border); min-height: 50px; }
+        .card { background: white; padding: 12px; border-radius: 12px; margin-top: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .qty-box { float: right; display: flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 8px; }
+        .btn-sub { background: var(--dark); color: white; border: none; width: 100%; margin-top: auto; padding: 8px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; }
+        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 6px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
+        .delete-btn { background: var(--danger); color: white; border: none; width: 100%; margin-top: 4px; padding: 6px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; overflow-y: auto; max-height: 80vh; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        .member-ctrl { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px; margin-top: 5px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
-    <div class="login-box" id="loginBox">
+    <div class="login-box">
         <h2>🏠 Family Hub</h2>
-        <input type="text" id="userNameInput" placeholder="Enter Name (e.g., Chinmay)">
-        <button class="btn-main" style="width:100%" onclick="login()">Enter Hub</button>
+        <input type="text" id="userName" placeholder="Type Your Name">
+        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;">Enter</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <header>
-        <button onclick="location.reload()" style="position:absolute; left:15px;">Logout</button>
-        <div id="adminIndicator" style="display:none; position:absolute; right:15px; background:red; color:white; padding:4px 8px; border-radius:5px; font-size:10px;">ADMIN</div>
-        <h2 id="welcomeText">Dashboard</h2>
+        <h2>Pantry Dashboard</h2>
+        <div id="adminIndicator" class="admin-badge">ADMIN</div>
+        <input type="text" id="searchBar" placeholder="🔍 Search objects (M.3)..." onkeyup="renderInventory()" style="max-width:300px; margin-top:10px;">
     </header>
 
-    <div id="adminPanel" class="admin-section" style="display:none;">
-        <h3>🛠️ Admin Control Center</h3>
+    <div id="noticeBoard"></div>
+
+    <div id="adminSettings">
+        <span class="admin-section-title">ADMIN PANEL (A.1 - A.5)</span>
+        <input type="text" id="adminNoticeInput" placeholder="Post notice...">
+        <button onclick="postNotice()" style="width:100%; padding:8px; background:var(--primary); color:white; border-radius:8px; border:none;">Post Notice</button>
         
-        <div class="card">
-            <strong>Add New Object</strong><br><br>
-            <input type="text" id="itemName" placeholder="Object Name" style="width:120px">
-            <input type="number" id="itemQty" placeholder="Qty" style="width:50px">
-            <select id="itemDefault">
-                <option value="">Default Location</option>
-                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
-                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
-            </select>
-            <button onclick="addObject()" class="btn-main">Add (A.1)</button>
-        </div>
+        <span class="admin-section-title">MEMBER STATUS (A.3, A.4)</span>
+        <div id="adminUserList">
+            </div>
 
-        <div class="card" id="adminMemberControls">
-            <strong>Member Management (M, D, C)</strong>
-        </div>
-
-        <div class="card">
-            <strong>Nightly Audit (A.5)</strong>
-            <button onclick="runNightlyAudit()" class="btn-audit">Run Audit Now</button>
-            <div id="auditResult" style="margin-top:10px; font-family: monospace; background:#eee; padding:10px; display:none;"></div>
-        </div>
+        <button onclick="runNightlyAudit()" style="width:100%; padding:10px; background:var(--dark); color:white; border-radius:8px; border:none; margin-top:15px;">🚀 Run Nightly Audit (A.5)</button>
     </div>
 
-    <input type="text" class="search-bar" id="objSearch" placeholder="🔍 Search for objects (Location Finder M.3)..." onkeyup="searchObjects()">
-
-    <div class="card" style="background: #eef2ff; border: 1px solid #c3dafe;">
-        <strong>Shift / Request Item</strong><br><br>
-        <select id="shiftObjId" style="width:100%; margin-bottom:10px;"></select>
-        <div style="display:flex; gap:10px;">
-            <input type="number" id="shiftQty" placeholder="Qty" style="width:60px">
-            <select id="shiftTo" style="flex:1">
-                <option value="">To Room...</option>
-                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
-                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
-            </select>
-            <select id="requestToMember" style="flex:1">
-                <option value="direct">Direct (M.2)</option>
-            </select>
-            <button onclick="handleShift()" class="btn-main">Go</button>
-        </div>
-    </div>
-
-    <div id="statusList" style="margin-bottom:20px;"></div>
-
-    <div class="pantry-grid">
-        <div class="room-col"><h4>🛏️ Room 1</h4><div id="room-Room 1"></div></div>
-        <div class="room-col"><h4>🛏️ Room 2</h4><div id="room-Room 2"></div></div>
-        <div class="room-col"><h4>🛏️ Room 3</h4><div id="room-Room 3"></div></div>
-        <div class="room-col"><h4>🍳 Kitchen</h4><div id="room-Kitchen"></div></div>
-        <div class="room-col"><h4>🛋️ Hall</h4><div id="room-Hall"></div></div>
-        <div class="room-col"><h4>📦 Store Room</h4><div id="room-Store Room"></div></div>
+    <div class="inventory-grid">
+        <div class="column" id="col-Kitchen"><h3>🍳 Kitchen</h3><div class="main-list" id="list-Kitchen"></div></div>
+        <div class="column" id="col-Dining"><h3>🍽️ Dining</h3><div class="main-list" id="list-Dining"></div></div>
+        <div class="column" id="col-Hall"><h3>🛋️ Hall</h3><div class="main-list" id="list-Hall"></div></div>
+        <div class="column" id="col-Room1"><h3>🛌 Room 1</h3><div class="main-list" id="list-Room1"></div></div>
+        <div class="column" id="col-Room2"><h3>🛌 Room 2</h3><div class="main-list" id="list-Room2"></div></div>
+        <div class="column" id="col-Room3"><h3>🛌 Room 3</h3><div class="main-list" id="list-Room3"></div></div>
+        <div class="column" id="col-Store"><h3>📦 Store Room</h3><div class="main-list" id="list-Store"></div></div>
     </div>
 </div>
 
+<button class="fab" onclick="openItemModal()">+</button>
+
+<div id="addItemModal" class="modal-overlay"><div class="modal-content">
+    <h3>📦 New Item (A.1)</h3>
+    <input type="text" id="newItemName" placeholder="Item Name">
+    <input type="number" id="newItemQty" placeholder="Initial Quantity" value="1">
+    <select id="newItemLoc"></select>
+    <button onclick="saveNewItem()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Add Item</button>
+    <button onclick="closeModal('addItemModal')" style="width:100%; margin-top:10px; border:none;">Cancel</button>
+</div></div>
+
+<div id="moveModal" class="modal-overlay"><div class="modal-content">
+    <h3 id="moveItemTitle">Move Item</h3>
+    <label>Quantity to shift:</label>
+    <input type="number" id="moveQty" min="1" value="1">
+    <label>Target Location:</label>
+    <select id="moveTargetLoc"></select>
+    <label>Request from Member (Optional):</label>
+    <select id="requestMember">
+        <option value="">None (Direct Shift M.2)</option>
+        <option value="M">Member M</option>
+        <option value="D">Member D</option>
+        <option value="C">Member C</option>
+    </select>
+    <button onclick="executeMove()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; margin-top:10px;">Confirm</button>
+    <button onclick="closeModal('moveModal')" style="width:100%; margin-top:10px; border:none;">Cancel</button>
+</div></div>
+
+<div id="auditModal" class="modal-overlay"><div class="modal-content">
+    <h3>🌙 Nightly Audit (A.5)</h3>
+    <div style="text-align:left; font-size: 0.9rem;">
+        <p>✅ N.1 Lights: OFF</p>
+        <p>✅ N.2 Water Tank: OFF</p>
+        <p>✅ N.3 Doors: LOCKED</p>
+        <hr>
+        <p><b>Misplaced Items:</b></p>
+        <div id="misplacedItemsList"></div>
+    </div>
+    <button onclick="closeModal('auditModal')" style="width:100%; padding:10px; background:var(--dark); color:white; border-radius:8px; border:none; margin-top:10px;">Close Audit</button>
+</div></div>
+
 <script>
-    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
         authDomain: "familyhub-172f8.firebaseapp.com",
@@ -122,136 +128,185 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    let currentUser = "";
-    let isAdmin = false;
-    const rooms = ["Room 1", "Room 2", "Room 3", "Kitchen", "Hall", "Store Room"];
+    let currentUser = "", isAdmin = false, currentInventory = {}, members = {};
+    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3", "Store"];
+    let pendingMoveKey = null;
 
     function login() {
-        const name = document.getElementById('userNameInput').value.trim();
-        if(!name) return;
-        currentUser = name;
-        isAdmin = (name.toLowerCase() === "chinmay"); // Admin login
-
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        if(isAdmin) {
-            document.getElementById('adminIndicator').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'block';
+        currentUser = document.getElementById('userName').value.trim();
+        if(!currentUser) return;
+        if(currentUser.toLowerCase()==="admin") { 
+            isAdmin=true; 
+            document.getElementById('adminIndicator').style.display='block'; 
+            document.getElementById('adminSettings').style.display='block'; 
         }
-        document.getElementById('welcomeText').innerText = `Welcome, ${currentUser}`;
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('mainApp').style.display='block';
         startSync();
     }
 
+    function startSync() {
+        db.ref('inventory').on('value', snap => {
+            currentInventory = snap.val() || {};
+            renderInventory();
+        });
+        db.ref('members').on('value', snap => {
+            members = snap.val() || { 
+                M: {status: 'free', leave: false}, 
+                D: {status: 'free', leave: false}, 
+                C: {status: 'free', leave: false} 
+            };
+            renderAdminMembers();
+        });
+        db.ref('settings/globalNotice').on('value', snap => {
+            const d = snap.val();
+            if(d) {
+                document.getElementById('noticeBoard').innerText = "📢 " + d.msg;
+                document.getElementById('noticeBoard').style.display = 'block';
+            }
+        });
+        updateDropdowns();
+    }
+
+    function renderInventory() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+
+        Object.keys(currentInventory).forEach(key => {
+            const item = currentInventory[key];
+            if(item.name.toLowerCase().includes(query)) {
+                const target = document.getElementById(`list-${item.location}`);
+                if(target) target.innerHTML += renderCard(key, item);
+            }
+        });
+    }
+
+    function renderCard(key, item) {
+        return `
+            <div class="card">
+                <div class="qty-box"><b>Qty: ${item.qty}</b></div>
+                <div style="font-weight:bold">${item.name}</div>
+                <div style="font-size:0.7rem; color:gray">Home: ${item.homeLoc}</div>
+                <button class="admin-home-btn" onclick="openMoveModal('${key}')">Shift / Request</button>
+                ${isAdmin ? `
+                    <button class="admin-home-btn" style="background:#666" onclick="setHome('${key}', '${item.location}')">Set as Home (A.2)</button>
+                    <button class="delete-btn" onclick="deleteItem('${key}')">Delete (A.1)</button>
+                ` : ''}
+            </div>`;
+    }
+
+    function renderAdminMembers() {
+        if(!isAdmin) return;
+        const container = document.getElementById('adminUserList');
+        container.innerHTML = "";
+        ['M', 'D', 'C'].forEach(mId => {
+            const m = members[mId];
+            container.innerHTML += `
+                <div class="member-ctrl">
+                    <span>Member ${mId}</span>
+                    <button onclick="toggleMember('${mId}', 'status')">${m.status.toUpperCase()}</button>
+                    <button onclick="toggleMember('${mId}', 'leave')" style="background:${m.leave?'var(--danger)':'var(--success)'}; color:white">${m.leave?'ON LEAVE':'AT HOME'}</button>
+                </div>`;
+        });
+    }
+
     // A.1 & A.2
-    function addObject() {
-        const name = document.getElementById('itemName').value;
-        const qty = parseInt(document.getElementById('itemQty').value);
-        const loc = document.getElementById('itemDefault').value;
-        if(name && qty && loc) {
-            db.ref('inventory').push({ name, qty, currentLocation: loc, defaultLocation: loc });
-            alert("Object Added!");
+    function saveNewItem() {
+        if(!isAdmin) return alert("Only Admin can add items");
+        const name = document.getElementById('newItemName').value;
+        const loc = document.getElementById('newItemLoc').value;
+        const qty = parseInt(document.getElementById('newItemQty').value) || 1;
+        if(name) {
+            db.ref('inventory').push({name, location: loc, homeLoc: loc, qty: qty});
+            closeModal('addItemModal');
         }
+    }
+
+    function deleteItem(key) {
+        if(confirm("Are you sure? Only Admins can do this.")) db.ref('inventory/' + key).remove();
+    }
+
+    function setHome(key, loc) {
+        db.ref('inventory/' + key).update({homeLoc: loc});
     }
 
     // M.1 & M.2
-    function handleShift() {
-        const id = document.getElementById('shiftObjId').value;
-        const sQty = parseInt(document.getElementById('shiftQty').value);
-        const toRoom = document.getElementById('shiftTo').value;
-        const reqUser = document.getElementById('requestToMember').value;
-
-        if(!id || !sQty || !toRoom) return alert("Missing Info");
-
-        if(reqUser !== "direct") {
-            db.ref('familyMembers/' + reqUser).once('value', snap => {
-                if(snap.val() && snap.val().status !== 'free') {
-                    alert(`User ${reqUser} is Busy! Choose another free member (M.1).`);
-                } else {
-                    executeShift(id, sQty, toRoom);
-                }
-            });
-        } else {
-            executeShift(id, sQty, toRoom);
-        }
+    function openMoveModal(key) {
+        pendingMoveKey = key;
+        const item = currentInventory[key];
+        document.getElementById('moveItemTitle').innerText = `Move ${item.name}`;
+        document.getElementById('moveQty').max = item.qty;
+        document.getElementById('moveQty').value = 1;
+        document.getElementById('moveModal').style.display = 'flex';
     }
 
-    function executeShift(id, sQty, to) {
-        db.ref('inventory/' + id).once('value', snap => {
-            const data = snap.val();
-            if(sQty > data.qty) return alert("Not enough qty!");
+    function executeMove() {
+        const key = pendingMoveKey;
+        const item = currentInventory[key];
+        const qtyToMove = parseInt(document.getElementById('moveQty').value);
+        const targetLoc = document.getElementById('moveTargetLoc').value;
+        const reqMem = document.getElementById('requestMember').value;
 
-            if(sQty === data.qty) {
-                db.ref('inventory/' + id).update({ currentLocation: to });
-            } else {
-                db.ref('inventory/' + id).update({ qty: data.qty - sQty });
-                db.ref('inventory').push({ name: data.name, qty: sQty, currentLocation: to, defaultLocation: data.defaultLocation });
+        if(qtyToMove > item.qty || qtyToMove <= 0) return alert("Invalid Quantity");
+        if(targetLoc === item.location) return alert("Already there!");
+
+        // M.1 Request Validation
+        if(reqMem !== "") {
+            const mem = members[reqMem];
+            if(mem.status !== 'free' || mem.leave === true) {
+                alert(`Member ${reqMem} is currently BUSY or ON LEAVE. Request denied.`);
+                return;
             }
-            alert("Shift Complete!");
-        });
+        }
+
+        // Processing Move
+        if(qtyToMove < item.qty) {
+            // Split
+            db.ref('inventory/' + key).update({qty: item.qty - qtyToMove});
+            db.ref('inventory').push({
+                name: item.name,
+                qty: qtyToMove,
+                location: targetLoc,
+                homeLoc: item.homeLoc
+            });
+        } else {
+            // Full Move
+            db.ref('inventory/' + key).update({location: targetLoc, qty: qtyToMove});
+        }
+        
+        closeModal('moveModal');
+    }
+
+    // A.3 & A.4
+    function toggleMember(id, field) {
+        if(field === 'status') {
+            const newStat = members[id].status === 'free' ? 'busy' : 'free';
+            db.ref(`members/${id}/status`).set(newStat);
+        } else {
+            db.ref(`members/${id}/leave`).set(!members[id].leave);
+        }
     }
 
     // A.5
     function runNightlyAudit() {
-        db.ref('inventory').once('value', snap => {
-            const items = snap.val();
-            let misplaced = [];
-            for(let key in items) {
-                if(items[key].currentLocation !== items[key].defaultLocation) {
-                    misplaced.push(`⚠️ ${items[key].name} is in ${items[key].currentLocation} (Default: ${items[key].defaultLocation})`);
-                }
-            }
-            const res = document.getElementById('auditResult');
-            res.style.display = "block";
-            res.innerHTML = `<strong>N.1-N.3 Checklist:</strong><br>✅ Lights Off | ✅ Water Tank Off | ✅ Doors Locked<br><br><strong>A.2 Misplaced Items:</strong><br>${misplaced.length ? misplaced.join('<br>') : "✅ All items in Default Home!"}`;
+        const misplaced = Object.values(currentInventory).filter(i => i.location !== i.homeLoc);
+        const list = document.getElementById('misplacedItemsList');
+        list.innerHTML = misplaced.length > 0 ? "" : "All items in default locations!";
+        misplaced.forEach(i => {
+            list.innerHTML += `<div style="color:var(--danger)">• ${i.name} (is in ${i.location}, should be in ${i.homeLoc})</div>`;
         });
+        document.getElementById('auditModal').style.display = 'flex';
     }
 
-    function startSync() {
-        // Sync Members (A.3, A.4)
-        db.ref('familyMembers').on('value', snap => {
-            const users = snap.val() || { M: {status:'free', leave:'No'}, D: {status:'free', leave:'No'}, C: {status:'free', leave:'No'} };
-            const sList = document.getElementById('statusList');
-            const aList = document.getElementById('adminMemberControls');
-            const reqList = document.getElementById('requestToMember');
-            
-            sList.innerHTML = "<h3>Family Status</h3>";
-            aList.innerHTML = "<strong>Admin User Control (A.3/A.4)</strong><br>";
-            reqList.innerHTML = '<option value="direct">Direct Shift (M.2)</option>';
-
-            for(let u in users) {
-                sList.innerHTML += `<div class="card">User ${u}: ${users[u].status.toUpperCase()} | Leave: ${users[u].leave}</div>`;
-                if(isAdmin) {
-                    aList.innerHTML += `<div style="margin-top:5px;">${u}: 
-                        <button onclick="db.ref('familyMembers/${u}').update({status:'${users[u].status==='free'?'busy':'free'}'})">Toggle Busy (A.3)</button>
-                        <button onclick="db.ref('familyMembers/${u}').update({leave:'${users[u].leave==='No'?'Yes':'No'}'})">Toggle Leave (A.4)</button>
-                    </div>`;
-                }
-                reqList.innerHTML += `<option value="${u}">Req via User ${u}</option>`;
-            }
-        });
-
-        // Sync Inventory
-        db.ref('inventory').on('value', snap => {
-            const items = snap.val();
-            rooms.forEach(r => document.getElementById(`room-${r}`).innerHTML = "");
-            const sel = document.getElementById('shiftObjId');
-            sel.innerHTML = '<option value="">Select Object to Move...</option>';
-
-            for(let key in items) {
-                const it = items[key];
-                const rDiv = document.getElementById(`room-${it.currentLocation}`);
-                if(rDiv) rDiv.innerHTML += `<div class="object-card"><b>${it.name}</b> (x${it.qty})${isAdmin ? ` <button onclick="db.ref('inventory/${key}').remove()" style="color:red; border:none; background:none;">[X]</button>` : ''}</div>`;
-                sel.innerHTML += `<option value="${key}">${it.name} (${it.qty}) - currently in ${it.currentLocation}</option>`;
-            }
-        });
+    function updateDropdowns() {
+        const html = rooms.map(r => `<option value="${r}">${r}</option>`).join("");
+        document.getElementById('newItemLoc').innerHTML = html;
+        document.getElementById('moveTargetLoc').innerHTML = html;
     }
 
-    function searchObjects() {
-        const q = document.getElementById('objSearch').value.toLowerCase();
-        document.querySelectorAll('.object-card').forEach(c => {
-            c.style.display = c.innerText.toLowerCase().includes(q) ? "block" : "none";
-        });
-    }
+    function openItemModal() { if(isAdmin) document.getElementById('addItemModal').style.display='flex'; else alert("Admin only feature"); }
+    function closeModal(id) { document.getElementById(id).style.display='none'; }
+    function postNotice() { const m = document.getElementById('adminNoticeInput').value; if(m) db.ref('settings/globalNotice').set({msg: m}); }
 </script>
 </body>
 </html>
