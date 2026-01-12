@@ -1,269 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Master Hub</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-        :root { --primary: #4a90e2; --dark: #2d3748; --success: #2ecc71; --danger: #e74c3c; --bg: #f0f4f8; --border: #cbd5e0; --warning: #f39c12; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 5000; }
-        .login-box { background: white; padding: 40px 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .container { max-width: 1400px; margin: 0 auto; display: none; padding: 15px 15px 100px 15px; }
-        header { background:white; padding:15px; border-radius:15px; text-align:center; margin-bottom:10px; position: relative; }
-        .admin-badge { position: absolute; right: 15px; top: 15px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; display: none; }
-        .bell-btn { background: var(--warning); border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; vertical-align: middle; margin-left: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #noticeBoard { background: var(--primary); color: white; padding: 12px; border-radius: 12px; margin-bottom: 15px; display: none; text-align: center; font-weight: 600; }
-        #adminSettings { display: none; background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .admin-section-title { font-size: 0.8rem; font-weight: bold; color: #856404; margin-top: 10px; display: block; }
-        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .column { background: #e2e8f0; padding: 15px; border-radius: 18px; min-height: 200px; display: flex; flex-direction: column; }
-        .card { background: white; padding: 12px; border-radius: 12px; margin-top: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .qty-box { float: right; display: flex; align-items: center; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 8px; font-size: 0.8rem; }
-        .qty-box button { border: none; background: var(--primary); color: white; border-radius: 4px; padding: 2px 6px; cursor: pointer; }
-        .admin-home-btn { background: var(--dark); color: white; border: none; width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
-        .delete-btn { background: var(--danger); color: white; border: none; width: 100%; margin-top: 4px; padding: 6px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 6000; justify-content: center; align-items: center; }
-        .modal-content { background: white; width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; text-align: center; }
-        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--success); color: white; border-radius: 50%; border: none; font-size: 30px; cursor: pointer; z-index: 1000; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; border: 1px solid #ddd; }
-        .member-ctrl { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; margin-top: 8px; border-radius: 12px; }
-    </style>
-</head>
-<body>
+// --- ADMIN REGISTRATION ---
+function registerUser() {
+    const name = document.getElementById('newUserName').value.trim();
+    if (!name) return;
 
-<div id="loginScreen">
-    <div class="login-box">
-        <h2>🏠 Family Hub</h2>
-        <input type="text" id="userName" placeholder="Your Name">
-        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px;">Enter</button>
-    </div>
-</div>
+    // Save to Firebase under 'familyMembers'
+    db.ref('familyMembers/' + name.toLowerCase()).set({
+        displayName: name,
+        status: 'free',
+        location: 'HOME'
+    }).then(() => {
+        document.getElementById('newUserName').value = "";
+        alert(name + " registered successfully!");
+    });
+}
 
-<div class="container" id="mainApp">
-    <header>
-        <h2>Pantry Dashboard</h2>
-        <div id="adminIndicator" class="admin-badge">ADMIN</div>
-        <div style="display:flex; justify-content:center; align-items:center;">
-            <input type="text" id="searchBar" placeholder="🔍 Search Objects..." onkeyup="renderInventory()" style="max-width:350px;">
-            <button class="bell-btn" onclick="ringBell()">🔔</button>
-        </div>
-    </header>
+// --- LOGIN CHECK ---
+function login() {
+    const inputName = document.getElementById('userNameInput').value.trim();
+    if (!inputName) return alert("Enter your name!");
 
-    <div id="noticeBoard"></div>
+    const lowerName = inputName.toLowerCase();
 
-    <div id="adminSettings">
-        <span class="admin-section-title">ADMIN PANEL</span>
-        <input type="text" id="adminNoticeInput" placeholder="Post notice...">
-        <button onclick="postNotice()" style="width:100%; padding:8px; background:var(--primary); color:white; border-radius:8px; border:none; margin-bottom:10px;">Post Notice</button>
-        <div id="adminUserList"></div>
-        <button onclick="broadcastAudit()" style="width:100%; padding:12px; background:var(--dark); color:white; border-radius:8px; border:none; margin-top:15px; font-weight:bold;">🚀 BROADCAST NIGHTLY AUDIT (ALL)</button>
-    </div>
+    // Set YOUR admin name here
+    if (lowerName === "chinmay") { 
+        isAdmin = true;
+        currentUser = "Chinmay";
+        enterApp();
+        return;
+    }
 
-    <div class="inventory-grid">
-        <div class="column"><h3>🍳 Kitchen</h3><div id="list-Kitchen"></div></div>
-        <div class="column"><h3>🍽️ Dining</h3><div id="list-Dining"></div></div>
-        <div class="column"><h3>🛋️ Hall</h3><div id="list-Hall"></div></div>
-        <div class="column"><h3>🛌 Room 1</h3><div id="list-Room1"></div></div>
-        <div class="column"><h3>🛌 Room 2</h3><div id="list-Room2"></div></div>
-        <div class="column"><h3>🛌 Room 3</h3><div id="list-Room3"></div></div>
-        <div class="column" style="background:#cbd5e0;"><h3>📦 Store Room</h3><div id="list-Store"></div></div>
-    </div>
-</div>
-
-<button class="fab" onclick="openItemModal()">+</button>
-
-<div id="auditModal" class="modal-overlay"><div class="modal-content">
-    <h2>🌙 Nightly Checklist</h2>
-    <div style="text-align:left; line-height:1.6; max-height: 300px; overflow-y: auto;">
-        <div id="auditChecks">🔘 Lights: OFF | 🔘 Tank: OFF | 🔘 Doors: LOCKED</div>
-        <hr>
-        <p><b>Misplaced Items:</b></p>
-        <div id="misplacedItemsList" style="font-size:0.85rem; color:var(--danger)"></div>
-    </div>
-    <button onclick="closeModal('auditModal')" style="width:100%; padding:10px; background:var(--dark); color:white; border-radius:8px; border:none; margin-top:15px;">I'm on it!</button>
-</div></div>
-
-<div id="addItemModal" class="modal-overlay"><div class="modal-content">
-    <h3>📦 Add Object</h3>
-    <input type="text" id="newItemName" placeholder="Object Name">
-    <input type="number" id="newItemQty" value="1">
-    <select id="newItemLoc"></select>
-    <button onclick="saveNewItem()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:10px;">Save</button>
-    <button onclick="closeModal('addItemModal')" style="margin-top:10px; border:none;">Cancel</button>
-</div></div>
-
-<div id="moveModal" class="modal-overlay"><div class="modal-content">
-    <h3 id="moveItemTitle">Move</h3>
-    <input type="number" id="moveQty" min="1" value="1">
-    <select id="moveTargetLoc"></select>
-    <select id="requestMember"><option value="">Direct Move</option><option value="M">User M</option><option value="D">User D</option><option value="C">User C</option></select>
-    <button onclick="executeMove()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; margin-top:10px;">Confirm</button>
-    <button onclick="closeModal('moveModal')" style="margin-top:10px; border:none;">Cancel</button>
-</div></div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
-        authDomain: "familyhub-172f8.firebaseapp.com",
-        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
-        projectId: "familyhub-172f8",
-        storageBucket: "familyhub-172f8.firebasestorage.app",
-        messagingSenderId: "854442266486",
-        appId: "1:854442266486:web:be03aebb29f7537907b457"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    // Direct link to a chime sound
-    const chime = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-
-    let currentUser = "", isAdmin = false, currentInventory = {}, members = {};
-    const rooms = ["Kitchen", "Dining", "Hall", "Room1", "Room2", "Room3", "Store"];
-    let pendingMoveKey = null;
-
-    function login() {
-        const val = document.getElementById('userName').value.trim();
-        if(!val) return;
-        
-        // UNLOCK AUDIO: Browser requires user interaction to play sound
-        chime.play().then(() => { chime.pause(); chime.currentTime = 0; }).catch(() => {});
-        
-        currentUser = val;
-        if(currentUser.toLowerCase() === "admin") {
-            isAdmin = true;
-            document.getElementById('adminIndicator').style.display = 'block';
-            document.getElementById('adminSettings').style.display = 'block';
+    // Check if the user is pre-registered in Firebase
+    db.ref('familyMembers/' + lowerName).once('value', (snap) => {
+        if (snap.exists()) {
+            currentUser = snap.val().displayName;
+            enterApp();
+        } else {
+            // "Waiting for confirmation" screen for unknown users
+            document.getElementById('loginBox').innerHTML = `
+                <h2 style="color:#e74c3c">🚫 Access Restricted</h2>
+                <p><b>Waiting for confirmation!</b></p>
+                <p style="font-size:0.8rem;">The Admin must register "${inputName}" first.</p>
+                <button onclick="location.reload()" style="margin-top:10px; cursor:pointer;">Try Again</button>
+            `;
         }
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        startSync();
-    }
+    });
+}
 
-    function startSync() {
-        db.ref('inventory').on('value', snap => { currentInventory = snap.val() || {}; renderInventory(); });
-        db.ref('members').on('value', snap => { members = snap.val() || {}; renderAdminMembers(); });
-        
-        db.ref('settings/globalNotice').on('value', snap => {
-            const d = snap.val();
-            if(d) { document.getElementById('noticeBoard').innerText = "📢 " + d.msg; document.getElementById('noticeBoard').style.display = 'block'; }
-        });
+function enterApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    if (isAdmin) document.getElementById('adminSettings').style.display = 'block';
+    startFamilySync();
+}
 
-        // Listen for Bell
-        db.ref('settings/bell').on('value', snap => {
-            const data = snap.val();
-            // Only ring if the message is fresh (less than 5 seconds old)
-            if(data && data.ringer !== currentUser && (Date.now() - data.time < 5000)) { 
-                chime.play().catch(e => console.log("Sound blocked:", e)); 
-            }
-        });
+// --- SYNC STATUS (Restoring your UI) ---
+function startFamilySync() {
+    db.ref('familyMembers').on('value', (snap) => {
+        const members = snap.val();
+        const listDiv = document.getElementById('familyStatusList');
+        listDiv.innerHTML = ""; 
 
-        // Listen for Nightly Audit
-        db.ref('settings/lastAudit').on('value', snap => {
-            if(snap.val() && (Date.now() - snap.val().time < 10000)) showAuditUI();
-        });
+        for (let id in members) {
+            const m = members[id];
+            listDiv.innerHTML += `
+                <div style="display:flex; align-items:center; justify-content:space-between; background:white; padding:15px; margin-bottom:10px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                    <span style="font-weight:bold; flex:1;">User ${m.displayName}</span>
+                    
+                    <button onclick="toggleStatus('${id}', '${m.status}')" 
+                        style="margin:0 15px; padding:5px 12px; border:1px solid #999; background:#f8f9fa; border-radius:4px; cursor:pointer; min-width:60px;">
+                        ${m.status}
+                    </button>
 
-        rooms.forEach(r => {
-            document.getElementById('newItemLoc').innerHTML += `<option value="${r}">${r}</option>`;
-            document.getElementById('moveTargetLoc').innerHTML += `<option value="${r}">${r}</option>`;
-        });
-    }
-
-    function ringBell() { 
-        db.ref('settings/bell').set({ ringer: currentUser, time: Date.now() }); 
-    }
-
-    function broadcastAudit() { 
-        db.ref('settings/lastAudit').set({ time: Date.now() }); 
-    }
-
-    function showAuditUI() {
-        const list = document.getElementById('misplacedItemsList');
-        const misplaced = Object.values(currentInventory).filter(i => i.location !== i.homeLoc);
-        list.innerHTML = misplaced.length ? "" : "Perfect! Everything is in its place.";
-        misplaced.forEach(i => { list.innerHTML += `<div>⚠️ ${i.name} -> Move to ${i.homeLoc}</div>`; });
-        document.getElementById('auditModal').style.display = 'flex';
-    }
-
-    function renderInventory() {
-        const query = document.getElementById('searchBar').value.toLowerCase();
-        rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
-        Object.keys(currentInventory).forEach(key => {
-            const item = currentInventory[key];
-            if(item.name.toLowerCase().includes(query)) {
-                const target = document.getElementById(`list-${item.location}`);
-                if(target) target.innerHTML += `
-                    <div class="card">
-                        <div class="qty-box">
-                            ${isAdmin ? `<button onclick="adjustQty('${key}', -1)">-</button>` : ''}
-                            <b>${item.qty}</b>
-                            ${isAdmin ? `<button onclick="adjustQty('${key}', 1)">+</button>` : ''}
-                        </div>
-                        <div style="font-weight:bold">${item.name}</div>
-                        <div style="font-size:0.6rem; color:gray">Home: ${item.homeLoc}</div>
-                        <button class="admin-home-btn" onclick="openMoveModal('${key}')">Shift/Request</button>
-                        ${isAdmin ? `<button class="delete-btn" onclick="deleteItem('${key}')">Remove</button>` : ''}
-                    </div>`;
-            }
-        });
-    }
-
-    function adjustQty(key, delta) {
-        const newQty = (currentInventory[key].qty || 0) + delta;
-        if(newQty >= 0) db.ref('inventory/' + key).update({qty: newQty});
-    }
-
-    function renderAdminMembers() {
-        if(!isAdmin) return;
-        const container = document.getElementById('adminUserList');
-        container.innerHTML = "";
-        ['M', 'D', 'C'].forEach(id => {
-            const m = members[id] || {status: 'free', leave: false};
-            container.innerHTML += `<div class="member-ctrl"><span>User ${id}</span>
-                <button onclick="toggleMember('${id}','status')">${m.status}</button>
-                <button onclick="toggleMember('${id}','leave')">${m.leave?'LEAVE':'HOME'}</button></div>`;
-        });
-    }
-
-    function toggleMember(id, type) {
-        const m = members[id] || {status:'free', leave:false};
-        if(type === 'status') db.ref(`members/${id}/status`).set(m.status === 'free' ? 'busy' : 'free');
-        else db.ref(`members/${id}/leave`).set(!m.leave);
-    }
-
-    function openMoveModal(key) {
-        pendingMoveKey = key;
-        document.getElementById('moveItemTitle').innerText = "Move " + currentInventory[key].name;
-        document.getElementById('moveModal').style.display = 'flex';
-    }
-
-    function executeMove() {
-        const item = currentInventory[pendingMoveKey];
-        const qty = parseInt(document.getElementById('moveQty').value);
-        const target = document.getElementById('moveTargetLoc').value;
-        const req = document.getElementById('requestMember').value;
-        if(req && (members[req]?.status === 'busy' || members[req]?.leave)) return alert("User Busy/Away");
-        if(qty >= item.qty) db.ref('inventory/' + pendingMoveKey).update({location: target});
-        else {
-            db.ref('inventory/' + pendingMoveKey).update({qty: item.qty - qty});
-            db.ref('inventory').push({name: item.name, qty: qty, location: target, homeLoc: item.homeLoc});
+                    <button onclick="toggleLocation('${id}', '${m.location}')"
+                        style="padding:5px 12px; border:1px solid #999; background:#f8f9fa; border-radius:4px; cursor:pointer; min-width:70px;">
+                        ${m.location}
+                    </button>
+                </div>
+            `;
         }
-        closeModal('moveModal');
-    }
+    });
+}
 
-    function saveNewItem() {
-        const name = document.getElementById('newItemName').value;
-        const qty = parseInt(document.getElementById('newItemQty').value);
-        const loc = document.getElementById('newItemLoc').value;
-        if(name) { db.ref('inventory').push({name, qty, location: loc, homeLoc: loc}); closeModal('addItemModal'); }
-    }
+function toggleStatus(id, current) {
+    const next = current === 'free' ? 'busy' : 'free';
+    db.ref('familyMembers/' + id).update({ status: next });
+}
 
-    function deleteItem(key) { if(confirm("Delete?")) db.ref('inventory/' + key).remove(); }
-    function openItemModal() { if(isAdmin) document.getElementById('addItemModal').style.display='flex'; else alert("Admin Only"); }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    function postNotice() { db.ref('settings/globalNotice').set({msg: document.getElementById('adminNoticeInput').value}); }
-</script>
-</body>
-</html>
+function toggleLocation(id, current) {
+    const next = current === 'HOME' ? 'LEAVE' : 'HOME';
+    db.ref('familyMembers/' + id).update({ location: next });
+}
+
+function logout() { location.reload(); }
