@@ -7,151 +7,38 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --primary: #4a90e2;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --bg: #fdf6e3; /* Light cream background to match your style */
-            --card-bg: #fff;
-        }
+        :root { --primary: #4a90e2; --success: #2ecc71; --danger: #e74c3c; --bg: #fdf6e3; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
+        
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 0;
-        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { background: white; padding: 15px; border-radius: 15px; text-align: center; position: relative; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .logout-btn { position: absolute; left: 15px; top: 20px; background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .admin-badge { position: absolute; right: 15px; top: 20px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; }
 
-        /* Login Screen Styles */
-        #loginScreen {
-            position: fixed;
-            inset: 0;
-            background: var(--primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
+        /* Family Status UI */
+        .status-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f0e0d0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .user-label { font-weight: bold; flex: 1; color: #333; }
+        .btn-toggle { padding: 6px 15px; border: 1px solid #333; background: #f8f9fa; border-radius: 5px; cursor: pointer; font-size: 0.9rem; min-width: 80px; text-transform: uppercase; }
 
-        .login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            width: 85%;
-            max-width: 320px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
+        /* Objects Grid */
+        .pantry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 30px; }
+        .room-col { background: #e2e8f0; padding: 15px; border-radius: 15px; min-height: 150px; }
+        .object-card { background: white; padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 0.9rem; border-left: 4px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .login-box input {
-            width: 100%;
-            padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Main Dashboard Styles */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            text-align: center;
-            position: relative;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .logout-btn {
-            position: absolute;
-            left: 15px;
-            top: 20px;
-            background: #eee;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .admin-badge {
-            position: absolute;
-            right: 15px;
-            top: 20px;
-            background: var(--danger);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 5px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-
-        /* Status Row Styles (Matching your image) */
-        .status-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #fffcf0;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            border: 1px solid #f0e0d0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .user-label {
-            font-weight: bold;
-            flex: 1;
-            color: #333;
-        }
-
-        .btn-toggle {
-            padding: 6px 15px;
-            border: 1px solid #333;
-            background: #f8f9fa;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            min-width: 80px;
-        }
-
-        .btn-toggle:active {
-            background: #ddd;
-        }
-
-        #adminSettings {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #ffeeba;
-        }
+        #adminSettings { background: #fff3cd; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
     <div class="login-box" id="loginBox">
-        <h2 style="margin-top:0">🏠 Family Hub</h2>
-        <input type="text" id="userNameInput" placeholder="Enter Name...">
+        <h2>🏠 Family Hub</h2>
+        <input type="text" id="userNameInput" placeholder="Enter Your Name...">
         <button onclick="login()">Sign In</button>
     </div>
 </div>
@@ -164,19 +51,29 @@
     </header>
 
     <div id="adminSettings" style="display:none;">
-        <p style="margin:0 0 10px 0; font-weight:bold;">Register Family Member:</p>
+        <p style="margin:0 0 10px 0; font-weight:bold;">Register New Member:</p>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="newUserName" placeholder="Member Name..." style="flex:1; padding:8px; border-radius:5px; border:1px solid #ccc;">
-            <button onclick="registerUser()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Add</button>
+            <input type="text" id="newUserName" placeholder="Name..." style="flex:1; padding:8px; border-radius:5px; border:1px solid #ccc;">
+            <button onclick="registerUser()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Add Member</button>
         </div>
     </div>
 
-    <div id="familyStatusList">
-        </div>
+    <h3 style="color: #555;">Family Presence</h3>
+    <div id="familyStatusList"></div>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 2px dashed #ccc;">
+
+    <h3 style="color: #555;">Room Inventory</h3>
+    <div class="pantry-grid">
+        <div class="room-col"><h4>🍳 Kitchen</h4><div id="list-Kitchen"></div></div>
+        <div class="room-col"><h4>🍽️ Dining</h4><div id="list-Dining"></div></div>
+        <div class="room-col"><h4>🛋️ Hall</h4><div id="list-Hall"></div></div>
+        <div class="room-col"><h4>📦 Store</h4><div id="list-Store"></div></div>
+    </div>
 </div>
 
 <script>
-    // 1. YOUR FIREBASE CONFIG
+    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
         authDomain: "familyhub-172f8.firebaseapp.com",
@@ -192,31 +89,31 @@
     
     let currentUser = "";
     let isAdmin = false;
+    const rooms = ["Kitchen", "Dining", "Hall", "Store"];
 
-    // 2. ADMIN REGISTRATION LOGIC
+    // REGISTER NEW USER (Admin only)
     function registerUser() {
         const name = document.getElementById('newUserName').value.trim();
         if (!name) return;
 
-        // Save to Firebase folder 'familyMembers'
         db.ref('familyMembers/' + name.toLowerCase()).set({
             displayName: name,
             status: 'free',
             location: 'HOME'
         }).then(() => {
             document.getElementById('newUserName').value = "";
-            alert(name + " registered!");
+            alert(name + " has been added to the family list!");
         });
     }
 
-    // 3. LOGIN LOGIC
+    // LOGIN LOGIC
     function login() {
         const inputName = document.getElementById('userNameInput').value.trim();
-        if (!inputName) return alert("Please enter a name!");
+        if (!inputName) return alert("Enter your name!");
 
         const lowerName = inputName.toLowerCase();
 
-        // MASTER ADMIN CHECK (Adjust this name to your preference)
+        // Check if Admin (Update name to your preference)
         if (lowerName === "chinmay") { 
             isAdmin = true;
             currentUser = "Chinmay";
@@ -224,18 +121,18 @@
             return;
         }
 
-        // CHECK IF REGISTERED
+        // Check Firebase for registered family member
         db.ref('familyMembers/' + lowerName).once('value', (snap) => {
             if (snap.exists()) {
                 currentUser = snap.val().displayName;
                 enterApp();
             } else {
-                // Unknown user message
+                // Show "Waiting for confirmation" for unknown users
                 document.getElementById('loginBox').innerHTML = `
                     <h2 style="color:var(--danger)">🚫 Access Denied</h2>
                     <p><b>Waiting for confirmation!</b></p>
-                    <p style="font-size:0.8rem;">Admin must register "${inputName}" first.</p>
-                    <button onclick="location.reload()" style="margin-top:10px; cursor:pointer;">Back</button>
+                    <p style="font-size:0.8rem;">The Admin must register "${inputName}" first.</p>
+                    <button onclick="location.reload()" style="margin-top:10px; cursor:pointer;">Go Back</button>
                 `;
             }
         });
@@ -250,16 +147,16 @@
             document.getElementById('adminIndicator').style.display = 'block';
             document.getElementById('adminSettings').style.display = 'block';
         }
-        startFamilySync();
+        startSync();
     }
 
-    // 4. RESTORE ORIGINAL BUTTON UI
-    function startFamilySync() {
+    // SYNC FAMILY & PANTRY DATA
+    function startSync() {
+        // 1. Sync Family Status (Original UI)
         db.ref('familyMembers').on('value', (snap) => {
             const members = snap.val();
             const listDiv = document.getElementById('familyStatusList');
             listDiv.innerHTML = ""; 
-
             if (!members) return;
 
             for (let id in members) {
@@ -267,36 +164,40 @@
                 listDiv.innerHTML += `
                     <div class="status-row">
                         <span class="user-label">User ${m.displayName}</span>
-                        
                         <button class="btn-toggle" style="margin-right:15px"
-                            onclick="toggleStatus('${id}', '${m.status}')">
-                            ${m.status}
-                        </button>
-
+                            onclick="toggleStatus('${id}', '${m.status}')">${m.status}</button>
                         <button class="btn-toggle"
-                            onclick="toggleLocation('${id}', '${m.location}')">
-                            ${m.location}
-                        </button>
-                    </div>
-                `;
+                            onclick="toggleLocation('${id}', '${m.location}')">${m.location}</button>
+                    </div>`;
+            }
+        });
+
+        // 2. Sync Objects (Pantry Rooms)
+        db.ref('inventory').on('value', (snap) => {
+            const items = snap.val();
+            rooms.forEach(r => document.getElementById(`list-${r}`).innerHTML = "");
+            if (items) {
+                Object.keys(items).forEach(key => {
+                    const item = items[key];
+                    const list = document.getElementById(`list-${item.location}`);
+                    if (list) {
+                        list.innerHTML += `<div class="object-card"><b>${item.name}</b> (Qty: ${item.qty})</div>`;
+                    }
+                });
             }
         });
     }
 
-    // 5. BUTTON TOGGLE FUNCTIONS
+    // TOGGLES
     function toggleStatus(id, current) {
-        const next = current === 'free' ? 'busy' : 'free';
-        db.ref('familyMembers/' + id).update({ status: next });
+        db.ref('familyMembers/' + id).update({ status: current === 'free' ? 'busy' : 'free' });
     }
 
     function toggleLocation(id, current) {
-        const next = current === 'HOME' ? 'LEAVE' : 'HOME';
-        db.ref('familyMembers/' + id).update({ location: next });
+        db.ref('familyMembers/' + id).update({ location: current === 'HOME' ? 'LEAVE' : 'HOME' });
     }
 
-    function logout() {
-        window.location.reload();
-    }
+    function logout() { window.location.reload(); }
 </script>
 </body>
 </html>
