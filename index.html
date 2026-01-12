@@ -1,94 +1,302 @@
-// --- ADMIN REGISTRATION ---
-function registerUser() {
-    const name = document.getElementById('newUserName').value.trim();
-    if (!name) return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Master Hub</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --bg: #fdf6e3; /* Light cream background to match your style */
+            --card-bg: #fff;
+        }
 
-    // Save to Firebase under 'familyMembers'
-    db.ref('familyMembers/' + name.toLowerCase()).set({
-        displayName: name,
-        status: 'free',
-        location: 'HOME'
-    }).then(() => {
-        document.getElementById('newUserName').value = "";
-        alert(name + " registered successfully!");
-    });
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
 
-// --- LOGIN CHECK ---
-function login() {
-    const inputName = document.getElementById('userNameInput').value.trim();
-    if (!inputName) return alert("Enter your name!");
+        /* Login Screen Styles */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            background: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
-    const lowerName = inputName.toLowerCase();
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
 
-    // Set YOUR admin name here
-    if (lowerName === "chinmay") { 
-        isAdmin = true;
-        currentUser = "Chinmay";
-        enterApp();
-        return;
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Main Dashboard Styles */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .logout-btn {
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            background: #eee;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .admin-badge {
+            position: absolute;
+            right: 15px;
+            top: 20px;
+            background: var(--danger);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Status Row Styles (Matching your image) */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fffcf0;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            border: 1px solid #f0e0d0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .user-label {
+            font-weight: bold;
+            flex: 1;
+            color: #333;
+        }
+
+        .btn-toggle {
+            padding: 6px 15px;
+            border: 1px solid #333;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            min-width: 80px;
+        }
+
+        .btn-toggle:active {
+            background: #ddd;
+        }
+
+        #adminSettings {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box" id="loginBox">
+        <h2 style="margin-top:0">🏠 Family Hub</h2>
+        <input type="text" id="userNameInput" placeholder="Enter Name...">
+        <button onclick="login()">Sign In</button>
+    </div>
+</div>
+
+<div class="container" id="mainApp" style="display:none;">
+    <header>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div id="adminIndicator" class="admin-badge" style="display:none;">ADMIN</div>
+        <h2 id="welcomeText" style="margin:0">Dashboard</h2>
+    </header>
+
+    <div id="adminSettings" style="display:none;">
+        <p style="margin:0 0 10px 0; font-weight:bold;">Register Family Member:</p>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="newUserName" placeholder="Member Name..." style="flex:1; padding:8px; border-radius:5px; border:1px solid #ccc;">
+            <button onclick="registerUser()" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Add</button>
+        </div>
+    </div>
+
+    <div id="familyStatusList">
+        </div>
+</div>
+
+<script>
+    // 1. YOUR FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
+        authDomain: "familyhub-172f8.firebaseapp.com",
+        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
+        projectId: "familyhub-172f8",
+        storageBucket: "familyhub-172f8.firebasestorage.app",
+        messagingSenderId: "854442266486",
+        appId: "1:854442266486:web:be03aebb29f7537907b457"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    let currentUser = "";
+    let isAdmin = false;
+
+    // 2. ADMIN REGISTRATION LOGIC
+    function registerUser() {
+        const name = document.getElementById('newUserName').value.trim();
+        if (!name) return;
+
+        // Save to Firebase folder 'familyMembers'
+        db.ref('familyMembers/' + name.toLowerCase()).set({
+            displayName: name,
+            status: 'free',
+            location: 'HOME'
+        }).then(() => {
+            document.getElementById('newUserName').value = "";
+            alert(name + " registered!");
+        });
     }
 
-    // Check if the user is pre-registered in Firebase
-    db.ref('familyMembers/' + lowerName).once('value', (snap) => {
-        if (snap.exists()) {
-            currentUser = snap.val().displayName;
+    // 3. LOGIN LOGIC
+    function login() {
+        const inputName = document.getElementById('userNameInput').value.trim();
+        if (!inputName) return alert("Please enter a name!");
+
+        const lowerName = inputName.toLowerCase();
+
+        // MASTER ADMIN CHECK (Adjust this name to your preference)
+        if (lowerName === "chinmay") { 
+            isAdmin = true;
+            currentUser = "Chinmay";
             enterApp();
-        } else {
-            // "Waiting for confirmation" screen for unknown users
-            document.getElementById('loginBox').innerHTML = `
-                <h2 style="color:#e74c3c">🚫 Access Restricted</h2>
-                <p><b>Waiting for confirmation!</b></p>
-                <p style="font-size:0.8rem;">The Admin must register "${inputName}" first.</p>
-                <button onclick="location.reload()" style="margin-top:10px; cursor:pointer;">Try Again</button>
-            `;
+            return;
         }
-    });
-}
 
-function enterApp() {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    if (isAdmin) document.getElementById('adminSettings').style.display = 'block';
-    startFamilySync();
-}
+        // CHECK IF REGISTERED
+        db.ref('familyMembers/' + lowerName).once('value', (snap) => {
+            if (snap.exists()) {
+                currentUser = snap.val().displayName;
+                enterApp();
+            } else {
+                // Unknown user message
+                document.getElementById('loginBox').innerHTML = `
+                    <h2 style="color:var(--danger)">🚫 Access Denied</h2>
+                    <p><b>Waiting for confirmation!</b></p>
+                    <p style="font-size:0.8rem;">Admin must register "${inputName}" first.</p>
+                    <button onclick="location.reload()" style="margin-top:10px; cursor:pointer;">Back</button>
+                `;
+            }
+        });
+    }
 
-// --- SYNC STATUS (Restoring your UI) ---
-function startFamilySync() {
-    db.ref('familyMembers').on('value', (snap) => {
-        const members = snap.val();
-        const listDiv = document.getElementById('familyStatusList');
-        listDiv.innerHTML = ""; 
-
-        for (let id in members) {
-            const m = members[id];
-            listDiv.innerHTML += `
-                <div style="display:flex; align-items:center; justify-content:space-between; background:white; padding:15px; margin-bottom:10px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-                    <span style="font-weight:bold; flex:1;">User ${m.displayName}</span>
-                    
-                    <button onclick="toggleStatus('${id}', '${m.status}')" 
-                        style="margin:0 15px; padding:5px 12px; border:1px solid #999; background:#f8f9fa; border-radius:4px; cursor:pointer; min-width:60px;">
-                        ${m.status}
-                    </button>
-
-                    <button onclick="toggleLocation('${id}', '${m.location}')"
-                        style="padding:5px 12px; border:1px solid #999; background:#f8f9fa; border-radius:4px; cursor:pointer; min-width:70px;">
-                        ${m.location}
-                    </button>
-                </div>
-            `;
+    function enterApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('welcomeText').innerText = `Hello, ${currentUser}`;
+        
+        if (isAdmin) {
+            document.getElementById('adminIndicator').style.display = 'block';
+            document.getElementById('adminSettings').style.display = 'block';
         }
-    });
-}
+        startFamilySync();
+    }
 
-function toggleStatus(id, current) {
-    const next = current === 'free' ? 'busy' : 'free';
-    db.ref('familyMembers/' + id).update({ status: next });
-}
+    // 4. RESTORE ORIGINAL BUTTON UI
+    function startFamilySync() {
+        db.ref('familyMembers').on('value', (snap) => {
+            const members = snap.val();
+            const listDiv = document.getElementById('familyStatusList');
+            listDiv.innerHTML = ""; 
 
-function toggleLocation(id, current) {
-    const next = current === 'HOME' ? 'LEAVE' : 'HOME';
-    db.ref('familyMembers/' + id).update({ location: next });
-}
+            if (!members) return;
 
-function logout() { location.reload(); }
+            for (let id in members) {
+                const m = members[id];
+                listDiv.innerHTML += `
+                    <div class="status-row">
+                        <span class="user-label">User ${m.displayName}</span>
+                        
+                        <button class="btn-toggle" style="margin-right:15px"
+                            onclick="toggleStatus('${id}', '${m.status}')">
+                            ${m.status}
+                        </button>
+
+                        <button class="btn-toggle"
+                            onclick="toggleLocation('${id}', '${m.location}')">
+                            ${m.location}
+                        </button>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    // 5. BUTTON TOGGLE FUNCTIONS
+    function toggleStatus(id, current) {
+        const next = current === 'free' ? 'busy' : 'free';
+        db.ref('familyMembers/' + id).update({ status: next });
+    }
+
+    function toggleLocation(id, current) {
+        const next = current === 'HOME' ? 'LEAVE' : 'HOME';
+        db.ref('familyMembers/' + id).update({ location: next });
+    }
+
+    function logout() {
+        window.location.reload();
+    }
+</script>
+</body>
+</html>
