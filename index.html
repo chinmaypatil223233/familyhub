@@ -2,302 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Master Hub</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-        :root { --primary: #4a90e2; --success: #2ecc71; --danger: #e74c3c; --bg: #fdf6e3; --dark: #2d3748; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
-        
-        /* Layout */
-        .container { max-width: 900px; margin: 0 auto; padding: 20px; display: none; }
-        header { background: white; padding: 15px; border-radius: 15px; text-align: center; position: relative; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .logout-btn { position: absolute; left: 15px; top: 20px; background: #eee; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .admin-badge { position: absolute; right: 15px; top: 20px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; }
-
-        /* Login */
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
-
-        /* UI Elements */
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e0d0c0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .status-row { display: flex; align-items: center; justify-content: space-between; }
-        .pantry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .room-col { background: #e2e8f0; padding: 15px; border-radius: 15px; min-height: 200px; }
-        .admin-section { background: #fff3cd; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        
-        button { cursor: pointer; border-radius: 5px; border: 1px solid #ccc; padding: 5px 10px; }
-        .action-btn { background: var(--primary); color: white; border: none; padding: 8px 12px; }
-        input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
-        .search-bar { width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd; }
-    </style>
-</head>
+    <title>Family Pantry System</title>
+    <link rel="stylesheet" href="style.css"> </head>
 <body>
 
-<div id="loginScreen">
-    <div class="login-box" id="loginBox">
-        <h2>🏠 Family Hub</h2>
-        <input type="text" id="userNameInput" placeholder="Enter Name (e.g. Chinmay)">
-        <button class="action-btn" style="width:100%" onclick="login()">Sign In</button>
-    </div>
-</div>
-
-<div class="container" id="mainApp">
-    <header>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-        <div id="adminIndicator" class="admin-badge" style="display:none;">ADMIN</div>
-        <h2 id="welcomeText">Dashboard</h2>
-    </header>
-
-    <div id="adminPanel" class="admin-section" style="display:none;">
-        <h3>🛠️ Admin Controls</h3>
-        
-        <div class="card">
-            <h4>Add/Delete Objects</h4>
-            <input type="text" id="itemName" placeholder="Object Name">
-            <input type="number" id="itemQty" placeholder="Qty" style="width: 60px;">
-            <select id="itemDefault">
-                <option value="">Default Room (A.2)</option>
-                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
-                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
-            </select>
-            <button onclick="addObject()" class="action-btn">Add Object</button>
-        </div>
-
-        <div class="card">
-            <h4>Manage Family Members (M, D, C)</h4>
-            <div id="adminMemberControls"></div>
-        </div>
-
-        <div class="card">
-            <h4>Nightly Audit (A.5)</h4>
-            <button onclick="runNightlyAudit()" style="background: var(--dark); color: white;">Generate Nightly Audit</button>
-            <div id="auditResult" style="margin-top:10px; font-size: 0.9rem;"></div>
-        </div>
+    <div id="admin-panel" style="border: 2px solid red; padding: 10px; margin-bottom: 20px;">
+        <h3>Admin Controls (A.1 - A.4)</h3>
+        <button onclick="toggleUserStatus('M')">Set M Free/Busy</button>
+        <button onclick="addDefaultItem()">Add New Object (Default Home)</button>
+        <button onclick="runNightlyAudit()">Generate Nightly Audit (A.5)</button>
     </div>
 
-    <input type="text" class="search-bar" id="objSearch" placeholder="🔍 Search for objects (M.3)..." onkeyup="searchObjects()">
-
-    <div id="shiftInterface" class="card" style="background: #eef2ff;">
-        <h4>Shift / Request Items (M.1 & M.2)</h4>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <select id="shiftObjId"></select>
-            <input type="number" id="shiftQty" placeholder="Qty" style="width: 50px;">
-            <select id="shiftTo">
-                <option value="">To Room...</option>
-                <option>Room 1</option><option>Room 2</option><option>Room 3</option>
-                <option>Kitchen</option><option>Hall</option><option>Store Room</option>
-            </select>
-            <select id="requestToMember">
-                <option value="direct">Direct Shift (M.2)</option>
-            </select>
-            <button onclick="handleShift()" class="action-btn">Execute</button>
-        </div>
+    <div id="search-bar">
+        <input type="text" id="objSearch" placeholder="Search for objects (M.3)..." onkeyup="searchObjects()">
     </div>
 
-    <h3>Family Status</h3>
-    <div id="memberStatusList"></div>
-
-    <h3>House Inventory</h3>
-    <div class="pantry-grid">
-        <div class="room-col"><h4>🛏️ Room 1</h4><div id="room-Room 1"></div></div>
-        <div class="room-col"><h4>🛏️ Room 2</h4><div id="room-Room 2"></div></div>
-        <div class="room-col"><h4>🛏️ Room 3</h4><div id="room-Room 3"></div></div>
-        <div class="room-col"><h4>🍳 Kitchen</h4><div id="room-Kitchen"></div></div>
-        <div class="room-col"><h4>🛋️ Hall</h4><div id="room-Hall"></div></div>
-        <div class="room-col"><h4>📦 Store Room</h4><div id="room-Store Room"></div></div>
+    <div id="house-grid" style="display: flex; flex-wrap: wrap;">
+        <div class="room" id="room1"><h4>Room 1</h4><ul id="list-room1"></ul></div>
+        <div class="room" id="room2"><h4>Room 2</h4><ul id="list-room2"></ul></div>
+        <div class="room" id="room3"><h4>Room 3</h4><ul id="list-room3"></ul></div>
+        <div class="kitchen" id="kitchen"><h4>Kitchen</h4><ul id="list-kitchen"></ul></div>
+        <div class="hall" id="hall"><h4>Hall</h4><ul id="list-hall"></ul></div>
+        <div class="store" id="store"><h4>Store Room</h4><ul id="list-store"></ul></div>
     </div>
-</div>
 
-<script>
-    // 1. CONFIG
-    const firebaseConfig = {
-        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EECy2pD2c8",
-        authDomain: "familyhub-172f8.firebaseapp.com",
-        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
-        projectId: "familyhub-172f8",
-        storageBucket: "familyhub-172f8.firebasestorage.app",
-        messagingSenderId: "854442266486",
-        appId: "1:854442266486:web:be03aebb29f7537907b457"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    let currentUser = "";
-    let isAdmin = false;
-    const rooms = ["Room 1", "Room 2", "Room 3", "Kitchen", "Hall", "Store Room"];
+    <div id="audit-modal" style="display:none; background: #eee; padding: 20px;">
+        <h2>Nightly Audit (A.5)</h2>
+        <p>[ ] N.1 Lights Off | [ ] N.2 Water Off | [ ] N.3 Doors Locked</p>
+        <div id="misplaced-items"></div>
+    </div>
 
-    // 2. AUTH
-    function login() {
-        const name = document.getElementById('userNameInput').value.trim();
-        if (!name) return;
-        currentUser = name;
-        isAdmin = (name.toLowerCase() === "chinmay"); // Admin check
-        
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        if (isAdmin) {
-            document.getElementById('adminIndicator').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'block';
-        }
-        document.getElementById('welcomeText').innerText = `Hello, ${currentUser}`;
-        initApp();
-    }
-
-    // 3. ADMIN ACTIONS (A.1, A.2, A.3, A.4)
-    function addObject() {
-        const name = document.getElementById('itemName').value;
-        const qty = parseInt(document.getElementById('itemQty').value);
-        const def = document.getElementById('itemDefault').value;
-        if (!name || isNaN(qty) || !def) return alert("Fill all fields");
-
-        db.ref('inventory').push({
-            name: name,
-            qty: qty,
-            currentLocation: def,
-            defaultLocation: def
-        });
-    }
-
-    function deleteObject(id) {
-        if (isAdmin && confirm("Delete this object?")) db.ref('inventory/' + id).remove();
-    }
-
-    // 4. SHIFTING LOGIC (M.1 & M.2)
-    function handleShift() {
-        const objId = document.getElementById('shiftObjId').value;
-        const qtyToMove = parseInt(document.getElementById('shiftQty').value);
-        const targetRoom = document.getElementById('shiftTo').value;
-        const memberReq = document.getElementById('requestToMember').value;
-
-        if (!objId || isNaN(qtyToMove) || !targetRoom) return alert("Select object, qty and target room");
-
-        // M.1 Request Logic
-        if (memberReq !== "direct") {
-            db.ref('familyMembers/' + memberReq).once('value', snap => {
-                const m = snap.val();
-                if (m.status !== 'free') {
-                    alert(`Member ${memberReq} is busy! (M.1) Select another member.`);
-                } else {
-                    processShift(objId, qtyToMove, targetRoom);
-                    alert("Request approved & Item shifted!");
-                }
-            });
-        } else {
-            processShift(objId, qtyToMove, targetRoom);
-        }
-    }
-
-    function processShift(id, qtyMoving, target) {
-        db.ref('inventory/' + id).once('value', snap => {
-            const item = snap.val();
-            if (qtyMoving > item.qty) return alert("Not enough quantity!");
-
-            if (qtyMoving === item.qty) {
-                // Shift whole object
-                db.ref('inventory/' + id).update({ currentLocation: target });
-            } else {
-                // Split quantity (M.1 example)
-                db.ref('inventory/' + id).update({ qty: item.qty - qtyMoving });
-                db.ref('inventory').push({
-                    name: item.name,
-                    qty: qtyMoving,
-                    currentLocation: target,
-                    defaultLocation: item.defaultLocation
-                });
-            }
-        });
-    }
-
-    // 5. NIGHTLY AUDIT (A.5)
-    function runNightlyAudit() {
-        db.ref('inventory').once('value', snap => {
-            const items = snap.val();
-            let misplaced = [];
-            for (let id in items) {
-                if (items[id].currentLocation !== items[id].defaultLocation) {
-                    misplaced.push(`${items[id].name} (is in ${items[id].currentLocation}, should be in ${items[id].defaultLocation})`);
-                }
-            }
-            
-            let auditText = `<b>N.1-N.3 Checklist:</b> ✅ Lights Off | ✅ Water Off | ✅ Doors Locked<br><br>`;
-            auditText += `<b>Misplaced Items (A.2 Check):</b><br>` + (misplaced.length ? misplaced.join('<br>') : "All items in default locations.");
-            document.getElementById('auditResult').innerHTML = auditText;
-        });
-    }
-
-    // 6. SYNC & UI GENERATION
-    function initApp() {
-        // Sync Members
-        db.ref('familyMembers').on('value', snap => {
-            const members = snap.val() || { M: {status:'free', leave: 'No'}, D: {status:'free', leave: 'No'}, C: {status:'free', leave: 'No'}};
-            const list = document.getElementById('memberStatusList');
-            const adminControls = document.getElementById('adminMemberControls');
-            const reqSelect = document.getElementById('requestToMember');
-            
-            list.innerHTML = ""; adminControls.innerHTML = ""; 
-            reqSelect.innerHTML = '<option value="direct">Direct Shift (M.2)</option>';
-
-            for (let id in members) {
-                const m = members[id];
-                // Dashboard View
-                list.innerHTML += `<div class="status-row card">
-                    <b>User ${id}</b> 
-                    <span>Status: ${m.status}</span> 
-                    <span>On Leave: ${m.leave}</span>
-                </div>`;
-                
-                // Admin Controls (A.3, A.4)
-                if (isAdmin) {
-                    adminControls.innerHTML += `<div style="margin-bottom:5px;">
-                        ${id}: 
-                        <button onclick="updateMember('${id}', 'status', '${m.status === 'free' ? 'busy' : 'free'}')">Toggle Free/Busy</button>
-                        <button onclick="updateMember('${id}', 'leave', 'Yes')">Set Leave</button>
-                        <button onclick="updateMember('${id}', 'leave', 'No')">Clear Leave</button>
-                    </div>`;
-                }
-
-                // Request Dropdown (M.1)
-                reqSelect.innerHTML += `<option value="${id}">Request via ${id}</option>`;
-            }
-        });
-
-        // Sync Inventory
-        db.ref('inventory').on('value', snap => {
-            const data = snap.val();
-            rooms.forEach(r => document.getElementById(`room-${r}`).innerHTML = "");
-            const shiftSelect = document.getElementById('shiftObjId');
-            shiftSelect.innerHTML = '<option value="">Select Object...</option>';
-
-            for (let id in data) {
-                const item = data[id];
-                const roomDiv = document.getElementById(`room-${item.currentLocation}`);
-                if (roomDiv) {
-                    roomDiv.innerHTML += `<div class="object-card">
-                        <b>${item.name}</b> x${item.qty} 
-                        ${isAdmin ? `<br><button onclick="deleteObject('${id}')" style="color:red; font-size:10px">Delete (A.1)</button>` : ''}
-                    </div>`;
-                }
-                shiftSelect.innerHTML += `<option value="${id}">${item.name} (${item.qty}) in ${item.currentLocation}</option>`;
-            }
-        });
-    }
-
-    function updateMember(id, field, val) {
-        db.ref('familyMembers/' + id).update({ [field]: val });
-    }
-
-    function searchObjects() {
-        const query = document.getElementById('objSearch').value.toLowerCase();
-        const cards = document.querySelectorAll('.object-card');
-        cards.forEach(card => {
-            card.parentElement.style.display = card.innerText.toLowerCase().includes(query) ? 'block' : 'none';
-        });
-    }
-
-    function logout() { window.location.reload(); }
-</script>
+    <script src="app.js"></script>
 </body>
 </html>
