@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATIL // HUB</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #1a1a1a; color: white; font-family: sans-serif; margin: 0; padding: 0; }
+        .header { background-color: #1a1a1a; padding: 20px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { color: #f1c40f; margin: 0; font-size: 28px; letter-spacing: 1px; }
+        
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; padding: 20px; }
+        .room-card { background-color: #262626; border-radius: 8px; overflow: hidden; border: 1px solid #333; margin-bottom: 15px; }
+        .room-title { background-color: #f1c40f; color: black; padding: 10px 15px; font-weight: bold; text-transform: uppercase; }
+        
+        .item-row { padding: 12px 15px; border-bottom: 1px dashed #444; display: flex; justify-content: space-between; align-items: center; }
+        .qty-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-math { background: none; border: 1px solid #f1c40f; color: #f1c40f; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+        
+        .notice-box { margin: 20px; padding: 15px; background: #262626; border: 1px solid #f1c40f; border-radius: 5px; }
+        .notice-item { padding: 8px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+
+        .btn-add { position: fixed; bottom: 20px; right: 20px; background: #f1c40f; color: black; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: #333; padding: 25px; border-radius: 10px; width: 300px; border: 2px solid #f1c40f; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; box-sizing: border-box; }
+        .btn-logout { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>PATIL // HUB</h1>
+    <div style="display: flex; gap: 15px; align-items: center;">
+        <span id="userDisplay" style="color: #f1c40f; font-size: 0.9rem;"></span>
+        <button onclick="handleLogout()" class="btn-logout">LOGOUT</button>
+    </div>
+</div>
+
+<div id="adminSection" style="display:none; margin: 20px;">
+    <div class="room-card" style="border: 2px solid #f1c40f;">
+        <div class="room-title">Admin: Invite New Member</div>
+        <div style="padding:15px;">
+            <input type="email" id="newMemberEmail" placeholder="Family Member Email">
+            <input type="password" id="newMemberPass" placeholder="Temporary Password">
+            <button onclick="inviteMember()" style="width:100%; padding:10px; background:#f1c40f; border:none; font-weight:bold; cursor:pointer;">CREATE & SEND WELCOME EMAIL</button>
+        </div>
+    </div>
+</div>
+
+<div class="notice-box">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="color:#f1c40f; margin:0;">📢 NOTICES</h3>
+        <button onclick="document.getElementById('noticeModal').style.display='flex'" style="background:#f1c40f; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; font-weight:bold;">POST</button>
+    </div>
+    <div id="noticeList" style="margin-top:10px;"></div>
+</div>
+
+<div class="container">
+    <div class="room-card"><div class="room-title">Kitchen</div><div id="list-Kitchen"></div></div>
+    <div class="room-card"><div class="room-title">Medicine</div><div id="list-Meds"></div></div>
+    <div class="room-card"><div class="room-title">Room 1</div><div id="list-Room1"></div></div>
+    <div class="room-card"><div class="room-title">Room 2</div><div id="list-Room2"></div></div>
+</div>
+
+<button class="btn-add" onclick="document.getElementById('itemModal').style.display='flex'">+</button>
+
+<div id="noticeModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:#f1c40f">Broadcast Notice</h3>
+        <input type="text" id="noticeText" placeholder="Enter message...">
+        <button onclick="saveNotice()" style="width:100%; padding:10px; background:#f1c40f; border:none; font-weight:bold; cursor:pointer;">POST & EMAIL</button>
+        <button onclick="document.getElementById('noticeModal').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">Cancel</button>
+    </div>
+</div>
+
+<div id="itemModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color:#f1c40f">Add New Item</h3>
+        <input type="text" id="itemName" placeholder="Item name...">
+        <select id="itemLoc">
+            <option value="Kitchen">Kitchen</option><option value="Meds">Medicine</option>
+            <option value="Room1">Room 1</option><option value="Room2">Room 2</option>
+        </select>
+        <button onclick="saveItem()" style="width:100%; padding:10px; background:#f1c40f; border:none; font-weight:bold; cursor:pointer;">SAVE ITEM</button>
+        <button onclick="document.getElementById('itemModal').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">Cancel</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EEcY2pD2c8",
+        authDomain: "familyhub-172f8.firebaseapp.com",
+        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
+        projectId: "familyhub-172f8",
+        storageBucket: "familyhub-172f8.firebasestorage.app",
+        messagingSenderId: "854442266486",
+        appId: "1:854442266486:web:be03aebb29f7537907b457"
+    };
+
+    // Initialize Firebase once
+    const mainApp = firebase.initializeApp(firebaseConfig);
+    const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+    
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const adminEmail = "patiladwaitchinmay@gmail.com";
+
+    // Auth Listener
+    auth.onAuthStateChanged(user => {
+        if(user) {
+            document.getElementById('userDisplay').innerText = user.email;
+            if(user.email === adminEmail) {
+                document.getElementById('adminSection').style.display = 'block';
+            }
+            loadHub();
+        } else {
+            // Redirect or show login if not authenticated
+            window.location.href = "login.html"; // Ensure this matches your login file name
+        }
+    });
+
+    function handleLogout() {
+        auth.signOut().then(() => { alert("Signed out!"); });
+    }
+
+    function inviteMember() {
+        const email = document.getElementById('newMemberEmail').value;
+        const pass = document.getElementById('newMemberPass').value;
+        if(!email || !pass) return alert("Enter email and password");
+
+        secondaryApp.auth().createUserWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                return userCredential.user.sendEmailVerification();
+            })
+            .then(() => {
+                alert("Success! Member added and Verification Email sent.");
+                document.getElementById('newMemberEmail').value = "";
+                document.getElementById('newMemberPass').value = "";
+                secondaryApp.auth().signOut();
+            })
+            .catch(error => alert("Error: " + error.message));
+    }
+
+    function loadHub() {
+        db.ref('notices').on('value', s => {
+            const list = document.getElementById('noticeList');
+            list.innerHTML = "";
+            const data = s.val() || {};
+            Object.keys(data).reverse().forEach(id => {
+                list.innerHTML += `<div class="notice-item">
+                    <span>${data[id].text}</span>
+                    <span onclick="deleteNotice('${id}')" style="color:red; cursor:pointer; font-weight:bold; padding-left:10px;">×</span>
+                </div>`;
+            });
+        });
+
+        db.ref('inventory').on('value', s => {
+            ["Kitchen", "Meds", "Room1", "Room2"].forEach(r => document.getElementById('list-'+r).innerHTML = "");
+            const data = s.val() || {};
+            Object.keys(data).forEach(id => {
+                const item = data[id];
+                const target = document.getElementById('list-'+item.location);
+                if(target) {
+                    target.innerHTML += `<div class="item-row">
+                        <span>${item.name}</span>
+                        <div class="qty-controls">
+                            <button class="btn-math" onclick="changeQty('${id}',-1)">-</button>
+                            <span style="font-size: 13px; min-width: 50px; text-align:center;">QTY: ${item.qty}</span>
+                            <button class="btn-math" onclick="changeQty('${id}',1)">+</button>
+                        </div>
+                    </div>`;
+                }
+            });
+        });
+    }
+
+    function saveNotice() {
+        const text = document.getElementById('noticeText').value;
+        if(text) {
+            db.ref('notices').push({ text, time: Date.now() }).then(() => {
+                window.location.href = `mailto:?subject=Patil Hub Notice&body=${encodeURIComponent(text)}`;
+                document.getElementById('noticeModal').style.display='none';
+                document.getElementById('noticeText').value = "";
+            });
+        }
+    }
+
+    function saveItem() {
+        const name = document.getElementById('itemName').value;
+        const location = document.getElementById('itemLoc').value;
+        if(name) {
+            db.ref('inventory').push({ name, location, qty: 1 }).then(() => {
+                document.getElementById('itemModal').style.display='none';
+                document.getElementById('itemName').value = "";
+            });
+        }
+    }
+
+    function changeQty(id, n) { db.ref('inventory/'+id+'/qty').transaction(q => Math.max(0, (q||0)+n)); }
+    function deleteNotice(id) { if(confirm("Delete this notice?")) db.ref('notices/'+id).remove(); }
+</script>
+</body>
+</html>

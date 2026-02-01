@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATIL // LOGIN</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <style>
+        body { 
+            background-color: #1a1a1a; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; font-family: sans-serif; 
+        }
+        .login-card { 
+            background: #262626; padding: 40px; border-radius: 12px; 
+            border: 2px solid #f1c40f; width: 320px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        h1 { color: #f1c40f; margin-bottom: 30px; letter-spacing: 2px; }
+        input { 
+            width: 100%; padding: 12px; margin: 10px 0; 
+            background: #111; border: 1px solid #444; color: white; 
+            border-radius: 5px; box-sizing: border-box;
+        }
+        button { 
+            width: 100%; padding: 12px; background: #f1c40f; 
+            color: black; border: none; border-radius: 5px; 
+            font-weight: bold; cursor: pointer; margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        .error { color: #ff6b6b; font-size: 0.8rem; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h1>PATIL HUB</h1>
+    <input type="email" id="email" placeholder="Family Email">
+    <input type="password" id="pass" placeholder="Password">
+    <button onclick="login()">ENTER HUB</button>
+    <div id="errMsg" class="error"></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSbzB3VXoJgpqZGH4hrXj5-EEcY2pD2c8",
+        authDomain: "familyhub-172f8.firebaseapp.com",
+        databaseURL: "https://familyhub-172f8-default-rtdb.firebaseio.com",
+        projectId: "familyhub-172f8",
+        storageBucket: "familyhub-172f8.firebasestorage.app",
+        messagingSenderId: "854442266486",
+        appId: "1:854442266486:web:be03aebb29f7537907b457"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function login() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('pass').value;
+        const err = document.getElementById('errMsg');
+
+        auth.signInWithEmailAndPassword(email, pass)
+            .then(() => {
+                // Change 'index.html' to whatever your main hub file is named
+                window.location.href = "familyhub.html"; 
+            })
+            .catch(e => {
+                err.style.display = "block";
+                err.innerText = "Access Denied: " + e.message;
+            });
+    }
+
+    // If already logged in, skip login page
+    auth.onAuthStateChanged(user => {
+        if(user) window.location.href = "index.html";
+    });
+</script>
+</body>
+</html>
